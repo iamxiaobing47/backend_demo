@@ -1,9 +1,13 @@
 package com.taco.backend_demo.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.taco.backend_demo.common.response.Response;
+import com.taco.backend_demo.common.response.ResponseFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -23,16 +27,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+import static com.taco.backend_demo.common.message.Messages.*;
+
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // 显式开启方法级权限控制
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-    // 确保依赖非空，避免空指针
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // 使用构造器注入（比@Autowired更推荐）
     @Autowired
     public SecurityConfig(UserDetailsService userDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
@@ -108,17 +112,20 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 异常处理：自定义认证/授权失败的响应
                 .exceptionHandling(ex -> {
+                    ObjectMapper objectMapper = new ObjectMapper();
                     // 认证失败
                     ex.authenticationEntryPoint((request, response, authException) -> {
-                        response.setContentType("application/json;charset=UTF-8");
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.getWriter().write("{\"code\":401,\"msg\":\"未认证，请先登录\"}");
+                        Response<Void> res = ResponseFactory.<Void>fail(CODE_401).getBody();
+                        response.getWriter().write(objectMapper.writeValueAsString(res));
                     });
                     // 授权失败
                     ex.accessDeniedHandler((request, response, accessDeniedException) -> {
-                        response.setContentType("application/json;charset=UTF-8");
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        response.getWriter().write("{\"code\":403,\"msg\":\"无权限访问\"}");
+                        Response<Void> res = ResponseFactory.<Void>fail(CODE_403).getBody();
+                        response.getWriter().write(objectMapper.writeValueAsString(res));
                     });
                 })
                 // 权限规则配置

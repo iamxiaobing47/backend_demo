@@ -28,12 +28,12 @@ public class ResponseFactory {
         return ResponseEntity.ok(response);
     }
 
-    public static <T> ResponseEntity<Response<T>> success(T data, String messageCode, String... args) {
+    public static <T> ResponseEntity<Response<T>> success(T data, String messageCode, String... messageArgs) {
         Response<T> response = new Response<>();
         response.setSuccess(true);
         response.setData(data);
         response.setMessageCode(messageCode);
-        response.setMessageArgs(args);
+        response.setMessageArgs(messageArgs);
         return ResponseEntity.ok(response);
     }
 
@@ -45,11 +45,11 @@ public class ResponseFactory {
     }
 
 
-    public static <T> ResponseEntity<Response<T>> fail(String messageCode, String... args) {
+    public static <T> ResponseEntity<Response<T>> fail(String messageCode, String... messageArgs) {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
-        response.setMessageArgs(args);
+        response.setMessageArgs(messageArgs);
         return ResponseEntity.ok(response);
     }
 
