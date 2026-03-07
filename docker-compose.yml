@@ -1,0 +1,24 @@
+version: '3.8'
+
+# 定义服务
+services:
+  postgres:
+    # 使用官方 PostgreSQL 镜像
+    image: postgres:latest
+    # 容器名称（自定义）
+    container_name: my-postgres
+    # 重启策略：容器退出时总是重启（除非手动停止）
+    restart: always
+    # 端口映射：宿主机端口:容器内端口（容器内默认5432）
+    ports:
+      - "5432:5432"
+    # 环境变量配置（核心配置）
+    environment:
+      # 数据库超级管理员密码（必须设置，自定义）
+      POSTGRES_PASSWORD: 123456
+      # 默认创建的数据库名称（可选，自定义）
+      POSTGRES_DB: postgres
+      # 默认创建的用户（可选，自定义）
+      POSTGRES_USER: admin
+      # 时区设置（避免时间相关问题）
+      TZ: Asia/Shanghai

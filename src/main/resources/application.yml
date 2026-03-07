@@ -1,0 +1,47 @@
+# Spring 应用基础配置
+spring:
+  # 应用名称（自定义）
+  application:
+    name: postgres-demo
+  # 数据库连接配置
+  datasource:
+    # PostgreSQL JDBC 驱动类名
+    driver-class-name: org.postgresql.Driver
+    # JDBC 连接URL (适配你的Docker配置)
+    # jdbc:postgresql://主机地址:端口/数据库名
+    url: jdbc:postgresql://localhost:5432/postgres
+    # 数据库用户名（对应Docker配置中的POSTGRES_USER）
+    username: admin
+    # 数据库密码（对应Docker配置中的POSTGRES_PASSWORD）
+    password: 123456
+    # 连接池配置（使用HikariCP，SpringBoot默认）
+    hikari:
+      # 连接池最大连接数
+      maximum-pool-size: 10
+      # 连接池最小空闲连接数
+      minimum-idle: 2
+      # 连接超时时间（毫秒）
+      connection-timeout: 30000
+      # 连接最大存活时间（毫秒）
+      max-lifetime: 1800000
+
+# MyBatis 配置
+mybatis:
+  # Mapper XML文件的位置（根据你的项目结构调整）
+  mapper-locations: classpath:mapper/**/*.xml
+  # 实体类别名包路径（简化XML中的类名引用）
+  type-aliases-package: com.example.demo.entity
+  # 配置项
+  configuration:
+    # 开启驼峰命名自动转换（如数据库字段user_name -> 实体类字段userName）
+    map-underscore-to-camel-case: true
+    # 开启日志打印SQL语句（开发环境建议开启）
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置（可选，便于调试）
+logging:
+  level:
+    # 打印MyBatis执行的SQL
+    com.example.demo.mapper: debug
+    # 打印JDBC连接相关日志
+    org.springframework.jdbc: debug
