@@ -144,4 +144,12 @@ public class Messages {
     public static final String CODE_999 = "MSG_999";
     public static final String MSG_999 = "系统异常，请联系管理员";
 
+    // 认证相关消息
+    public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
+    public static final String LOGIN_FAIL = "LOGIN_FAIL";
+    public static final String REGISTER_SUCCESS = "REGISTER_SUCCESS";
+    public static final String REGISTER_FAIL = "REGISTER_FAIL";
+    public static final String LOGOUT_SUCCESS = "LOGOUT_SUCCESS";
+    public static final String GET_USER_SUCCESS = "GET_USER_SUCCESS";
+
 }

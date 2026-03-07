@@ -37,6 +37,6 @@ mybatis-plus:
 logging:
   level:
     # 打印MyBatis执行的SQL
-    com.example.demo.mapper: debug
+    com.taco.backend_demo.mapper: debug
     # 打印JDBC连接相关日志
     org.springframework.jdbc: debug
