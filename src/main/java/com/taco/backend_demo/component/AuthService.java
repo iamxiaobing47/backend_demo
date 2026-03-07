@@ -2,10 +2,7 @@ package com.taco.backend_demo.component;
 
 import com.taco.backend_demo.dto.LoginRequest;
 import com.taco.backend_demo.dto.LoginResponse;
-import com.taco.backend_demo.entity.LoginLog;
 import com.taco.backend_demo.entity.User;
-import com.taco.backend_demo.mapper.LoginLogMapper;
-import com.taco.backend_demo.mapper.UserMapper;
 import com.taco.backend_demo.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;

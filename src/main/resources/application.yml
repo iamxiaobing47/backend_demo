@@ -25,17 +25,12 @@ spring:
       # 连接最大存活时间（毫秒）
       max-lifetime: 1800000
 
-# MyBatis 配置
-mybatis:
-  # Mapper XML文件的位置（根据你的项目结构调整）
+# MyBatis-Plus 配置
+mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
-  # 实体类别名包路径（简化XML中的类名引用）
-  type-aliases-package: com.example.demo.entity
-  # 配置项
+  type-aliases-package: com.taco.backend_demo.entity
   configuration:
-    # 开启驼峰命名自动转换（如数据库字段user_name -> 实体类字段userName）
     map-underscore-to-camel-case: true
-    # 开启日志打印SQL语句（开发环境建议开启）
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 # 日志配置（可选，便于调试）

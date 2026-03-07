@@ -1,7 +1,6 @@
 package com.taco.backend_demo.security;
 
 import com.taco.backend_demo.entity.User;
-import com.taco.backend_demo.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
