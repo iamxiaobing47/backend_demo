@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -24,6 +26,8 @@ import static com.taco.backend_demo.common.message.Messages.CODE_045;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationProvider.class);
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -37,7 +41,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
-        String rawPassword = authentication.getCredentials().toString();
+        String rawPassword = authentication.getCredentials() != null ? authentication.getCredentials().toString() : "";
+
+        logger.info("Authenticating user: {}, Password length: {}", username, rawPassword.length());
 
         UserDetails userDetails;
         try {

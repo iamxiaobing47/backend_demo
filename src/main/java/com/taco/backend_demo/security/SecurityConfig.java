@@ -66,7 +66,9 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager customAuthenticationManager() {
-        return new org.springframework.security.authentication.ProviderManager(customAuthenticationProvider);
+        return new org.springframework.security.authentication.ProviderManager(
+                List.of(customAuthenticationProvider)
+        );
     }
 
     /**

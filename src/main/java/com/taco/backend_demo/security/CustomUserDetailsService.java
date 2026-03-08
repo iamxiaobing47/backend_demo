@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static com.taco.backend_demo.common.message.Messages.CODE_042;
@@ -38,5 +39,24 @@ public class CustomUserDetailsService implements UserDetailsService {
                 passwordEntity.getPasswordHash(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
+    }
+
+    public void updateLastLogin(String email) {
+        LambdaQueryWrapper<PasswordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PasswordEntity::getEmail, email);
+        
+        PasswordEntity updateEntity = new PasswordEntity();
+        updateEntity.setLastLoginAt(LocalDateTime.now());
+        passwordMapper.update(updateEntity, wrapper);
+    }
+
+    public void resetRetryCount(String email) {
+        LambdaQueryWrapper<PasswordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PasswordEntity::getEmail, email);
+        
+        PasswordEntity updateEntity = new PasswordEntity();
+        updateEntity.setRetryCount(0);
+        updateEntity.setIsLocked(false);
+        passwordMapper.update(updateEntity, wrapper);
     }
 }
