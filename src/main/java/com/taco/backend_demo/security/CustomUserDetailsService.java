@@ -31,6 +31,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         wrapper.eq(PasswordEntity::getEmail, username);
 
         PasswordEntity passwordEntity = passwordMapper.selectOne(wrapper);
+
         if (passwordEntity == null) {
             throw new BusinessException(CODE_042);
         }

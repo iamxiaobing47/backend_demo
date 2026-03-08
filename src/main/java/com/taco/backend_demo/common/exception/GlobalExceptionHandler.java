@@ -3,13 +3,14 @@ package com.taco.backend_demo.common.exception;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.naming.AuthenticationException;
+
+import static com.taco.backend_demo.common.message.Messages.CODE_044;
 import static com.taco.backend_demo.common.message.Messages.MSG_999;
 
 /**
@@ -24,15 +25,27 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<Response<Object>> handleBaseException(BaseException e) {
-        log.error("业务异常：{}", e.getMessage(), e);
+        log.error("业务异常：{}", e.getMessageCode(), e);
 
         return ResponseFactory.fail(e.getMessageCode(), e.getMessageArgs());
     }
 
+    @ExceptionHandler(InternalAuthenticationServiceException.class)
+    public ResponseEntity<Response<Object>> handleInternalAuthException(InternalAuthenticationServiceException e) {
+        log.error("认证异常：{}", e.getMessage());
+
+        if (e.getCause() instanceof BaseException) {
+            return handleBaseException((BaseException) e.getCause());
+        }
+
+        return ResponseFactory.fail(CODE_044);
+    }
+
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleException(Exception e) {
+    public ResponseEntity<Response<Object>> handleException(Exception e) {
         log.error("系统异常：", e);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(MSG_999);
+        return  ResponseFactory.fail(MSG_999);
     }
 }

@@ -1,6 +1,6 @@
 package com.taco.backend_demo.common.exception;
 
-public abstract class BaseException extends RuntimeException{
+public class BaseException extends RuntimeException{
 
     private final String messageCode;
     private  String[] messageArgs;

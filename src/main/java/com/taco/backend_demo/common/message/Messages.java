@@ -141,6 +141,9 @@ public class Messages {
     public static final String CODE_043 = "MSG_043";
     public static final String MSG_043 = "用户已被锁定";
 
+    public static final String CODE_044 = "MSG_044";
+    public static final String MSG_044 = "认证失败";
+
     // HTTP
     public static final String CODE_401 = "MSG_401";
     public static final String MSG_401 = "未认证，请先登录";

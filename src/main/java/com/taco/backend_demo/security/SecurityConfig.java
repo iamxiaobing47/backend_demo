@@ -52,26 +52,11 @@ public class SecurityConfig {
     }
 
     /**
-     * 认证提供者：关联用户信息服务和密码加密器
-     */
-    @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
-    /**
      * 认证管理器
      */
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) {
-        try {
-            return authConfig.getAuthenticationManager();
-        } catch (Exception e) {
-            // 捕获异常并包装为运行时异常，避免方法抛出检查型异常
-            throw new RuntimeException("初始化认证管理器失败", e);
-        }
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 
     /**
@@ -138,8 +123,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
 
-        // 设置认证提供者
-        http.authenticationProvider(authenticationProvider());
         // 添加JWT过滤器（在用户名密码过滤器之前）
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
