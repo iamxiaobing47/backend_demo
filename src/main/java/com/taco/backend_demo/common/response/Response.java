@@ -31,4 +31,9 @@ public class Response<T> {
      * 消息参数数组
      */
     private String[] messageArgs;
+
+    /**
+     * 完整的消息文本（可选）
+     */
+    private String message;
 }

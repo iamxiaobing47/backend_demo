@@ -1,5 +1,6 @@
 package com.taco.backend_demo.common.response;
 
+import com.taco.backend_demo.common.message.MessageResolver;
 import org.springframework.http.ResponseEntity;
 
 /**
@@ -25,6 +26,7 @@ public class ResponseFactory {
         response.setSuccess(true);
         response.setData(data);
         response.setMessageCode(messageCode);
+        response.setMessage(MessageResolver.resolveMessage(messageCode));
         return ResponseEntity.ok(response);
     }
 
@@ -34,6 +36,7 @@ public class ResponseFactory {
         response.setData(data);
         response.setMessageCode(messageCode);
         response.setMessageArgs(messageArgs);
+        response.setMessage(MessageResolver.resolveMessage(messageCode, (Object[]) messageArgs));
         return ResponseEntity.ok(response);
     }
 
@@ -41,15 +44,16 @@ public class ResponseFactory {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
+        response.setMessage(MessageResolver.resolveMessage(messageCode));
         return ResponseEntity.ok(response);
     }
-
 
     public static <T> ResponseEntity<Response<T>> fail(String messageCode, String... messageArgs) {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
         response.setMessageArgs(messageArgs);
+        response.setMessage(MessageResolver.resolveMessage(messageCode, (Object[]) messageArgs));
         return ResponseEntity.ok(response);
     }
     
@@ -58,6 +62,7 @@ public class ResponseFactory {
         response.setSuccess(false);
         response.setData(data);
         response.setMessageCode(messageCode);
+        response.setMessage(MessageResolver.resolveMessage(messageCode));
         return ResponseEntity.ok(response);
     }
 
