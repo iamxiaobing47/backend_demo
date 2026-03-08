@@ -1,17 +1,16 @@
 package com.taco.backend_demo.security;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.taco.backend_demo.common.constants.LoginConstants;
 import com.taco.backend_demo.common.exception.BusinessException;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
+import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.slf4j.Logger;
@@ -20,9 +19,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
-import static com.taco.backend_demo.common.message.Messages.CODE_042;
-import static com.taco.backend_demo.common.message.Messages.CODE_043;
-import static com.taco.backend_demo.common.message.Messages.CODE_045;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E001;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E002;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E004;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
@@ -30,7 +29,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationProvider.class);
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private CustomUserDetailsService userDetailsService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -45,11 +44,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         logger.info("Authenticating user: {}, Password length: {}", username, rawPassword.length());
 
-        UserDetails userDetails;
+        LoginUser loginUser;
         try {
-            userDetails = userDetailsService.loadUserByUsername(username);
+            loginUser = userDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-            throw new BusinessException(CODE_042);
+            throw new BusinessException(E001);
         }
 
         LambdaQueryWrapper<PasswordEntity> wrapper = new LambdaQueryWrapper<>();
@@ -57,21 +56,21 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         PasswordEntity passwordEntity = passwordMapper.selectOne(wrapper);
 
         if (passwordEntity == null) {
-            throw new BusinessException(CODE_042);
+            throw new BusinessException(E001);
         }
 
         if (passwordEntity.getIsLocked()) {
-            throw new BusinessException(CODE_043);
+            throw new BusinessException(E002);
         }
 
         if (!passwordEncoder.matches(rawPassword, passwordEntity.getPasswordHash())) {
-            throw new BusinessException(CODE_045);
+            throw new BusinessException(E004);
         }
 
         return new UsernamePasswordAuthenticationToken(
-                userDetails,
+                loginUser,
                 rawPassword,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
+                Collections.singletonList(LoginConstants.ROLE_AUTHENTICATING)
         );
     }
 

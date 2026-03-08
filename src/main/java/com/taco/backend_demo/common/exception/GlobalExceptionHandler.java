@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.naming.AuthenticationException;
 
-import static com.taco.backend_demo.common.message.Messages.CODE_044;
-import static com.taco.backend_demo.common.message.Messages.MSG_999;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E003;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E999;
 
 /**
  * 全局异常处理器
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
             return handleBaseException((BaseException) e.getCause());
         }
 
-        return ResponseFactory.fail(CODE_044);
+        return ResponseFactory.fail(E003);
     }
 
 
@@ -46,6 +46,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Response<Object>> handleException(Exception e) {
         log.error("系统异常：", e);
 
-        return  ResponseFactory.fail(MSG_999);
+        return  ResponseFactory.fail(E999);
     }
 }

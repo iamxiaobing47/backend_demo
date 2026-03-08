@@ -28,7 +28,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-import static com.taco.backend_demo.common.message.Messages.*;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E007;
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E008;
 
 @Configuration
 @EnableWebSecurity
@@ -114,14 +115,14 @@ public class SecurityConfig {
                     ex.authenticationEntryPoint((request, response, authException) -> {
                         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        Response<Void> res = ResponseFactory.<Void>fail(CODE_401).getBody();
+                        Response<Void> res = ResponseFactory.<Void>fail(E007).getBody();
                         response.getWriter().write(objectMapper.writeValueAsString(res));
                     });
                     // 授权失败
                     ex.accessDeniedHandler((request, response, accessDeniedException) -> {
                         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        Response<Void> res = ResponseFactory.<Void>fail(CODE_403).getBody();
+                        Response<Void> res = ResponseFactory.<Void>fail(E008).getBody();
                         response.getWriter().write(objectMapper.writeValueAsString(res));
                     });
                 })
