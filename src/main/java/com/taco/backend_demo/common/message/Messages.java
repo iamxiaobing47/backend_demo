@@ -134,6 +134,13 @@ public class Messages {
     public static final String CODE_041 = "MSG_041";
     public static final String MSG_041 = "{0} 与 {1} 冲突";
 
+    // 认证相关消息
+    public static final String CODE_042 = "MSG_042";
+    public static final String MSG_042 = "用户名或密码错误";
+
+    public static final String CODE_043 = "MSG_043";
+    public static final String MSG_043 = "用户已被锁定";
+
     // HTTP
     public static final String CODE_401 = "MSG_401";
     public static final String MSG_401 = "未认证，请先登录";
@@ -144,7 +151,10 @@ public class Messages {
     public static final String CODE_999 = "MSG_999";
     public static final String MSG_999 = "系统异常，请联系管理员";
 
-    // 认证相关消息
+
+
+
+
     public static final String LOGIN_SUCCESS = "LOGIN_SUCCESS";
     public static final String LOGIN_FAIL = "LOGIN_FAIL";
     public static final String REGISTER_SUCCESS = "REGISTER_SUCCESS";
