@@ -1,5 +1,6 @@
 package com.taco.backend_demo.security;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.taco.backend_demo.common.exception.BusinessException;
 import com.taco.backend_demo.entity.PasswordEntity;
@@ -26,10 +27,10 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        QueryWrapper<PasswordEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("email", username);
+        LambdaQueryWrapper<PasswordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PasswordEntity::getEmail, username);
 
-        PasswordEntity passwordEntity = passwordMapper.selectOne(queryWrapper);
+        PasswordEntity passwordEntity = passwordMapper.selectOne(wrapper);
         if (passwordEntity == null) {
             throw new BusinessException(CODE_042);
         }
