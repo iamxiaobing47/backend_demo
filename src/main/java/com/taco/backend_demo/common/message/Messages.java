@@ -144,6 +144,12 @@ public class Messages {
     public static final String CODE_044 = "MSG_044";
     public static final String MSG_044 = "认证失败";
 
+    public static final String CODE_045 = "MSG_045";
+    public static final String MSG_045 = "密码校验失败";
+
+    public static final String CODE_046 = "MSG_046";
+    public static final String MSG_046 = "密码已过期";
+
     // HTTP
     public static final String CODE_401 = "MSG_401";
     public static final String MSG_401 = "未认证，请先登录";
@@ -153,7 +159,6 @@ public class Messages {
 
     public static final String CODE_999 = "MSG_999";
     public static final String MSG_999 = "系统异常，请联系管理员";
-
 
 
 

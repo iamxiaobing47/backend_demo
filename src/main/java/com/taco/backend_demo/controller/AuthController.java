@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private AuthenticationManager customAuthenticationManager;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -33,7 +33,7 @@ public class AuthController {
     @Operation(summary = "用户登录", description = "使用用户名和密码登录")
     @PostMapping("/login")
     public ResponseEntity<Response<LoginResponse>> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        Authentication authentication = customAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
 //        User user = (User) authentication.getPrincipal();
 //        String token = jwtUtils.generateToken(user.getUsername());
