@@ -31,6 +31,7 @@ dependencies {
     implementation("commons-codec:commons-codec:1.21.0")
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
     implementation 'com.baomidou:mybatis-plus-spring-boot3-starter:3.5.15'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
@@ -50,4 +51,112 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// 自定义任务：释放指定端口
+task killPort(type: Exec) {
+    description = 'Kill process running on specified port'
+    group = 'application'
+    
+    // 获取端口参数，默认为8080
+    def port = project.findProperty('port') ?: '8080'
+    
+    // Windows命令
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        commandLine 'cmd', '/c', "netstat -ano | findstr :${port} && for /f \"tokens=5\" %i in ('netstat -ano ^| findstr :${port}') do taskkill /PID %i /F || echo No process found on port ${port}"
+    } else {
+        // Linux/Mac命令
+        commandLine 'bash', '-c', "lsof -ti:${port} | xargs kill -9 2>/dev/null || echo No process found on port ${port}"
+    }
+}
+
+// 自定义任务：停止后端服务
+task stopBackend {
+    description = 'Stop backend service by killing port 8080'
+    group = 'application'
+    
+    dependsOn killPort
+}
+
+// 自定义任务：清理端口8080
+task cleanPort8080(type: Exec) {
+    description = 'Clean process on port 8080'
+    group = 'application'
+    
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        commandLine 'cmd', '/c', 'for /f "tokens=5" %i in (\'netstat -ano ^| findstr :8080\') do taskkill /PID %i /F'
+    } else {
+        commandLine 'bash', '-c', 'lsof -ti:8080 | xargs kill -9 2>/dev/null || true'
+    }
+}
+
+// 自定义任务：清理前端端口
+task cleanFrontendPorts(type: Exec) {
+    description = 'Clean processes on frontend ports (3000-3002)'
+    group = 'application'
+    
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        commandLine 'cmd', '/c', 'for /f "tokens=5" %i in (\'netstat -ano ^| findstr :3000\') do taskkill /PID %i /F && for /f "tokens=5" %i in (\'netstat -ano ^| findstr :3001\') do taskkill /PID %i /F && for /f "tokens=5" %i in (\'netstat -ano ^| findstr :3002\') do taskkill /PID %i /F'
+    } else {
+        commandLine 'bash', '-c', 'lsof -ti:3000 | xargs kill -9 2>/dev/null || true && lsof -ti:3001 | xargs kill -9 2>/dev/null || true && lsof -ti:3002 | xargs kill -9 2>/dev/null || true'
+    }
+}
+
+// 自定义任务：清理所有相关端口
+task cleanAll {
+    description = 'Clean all related processes (ports 8080, 3000-3002)'
+    group = 'application'
+    
+    dependsOn cleanPort8080, cleanFrontendPorts
+    
+    doLast {
+        println "All specified ports have been cleaned."
+    }
+}
+
+// 自定义任务：生成前端API（需要后端运行）
+task generateFrontendApi {
+    description = 'Generate frontend API client from running backend'
+    group = 'application'
+    
+    doLast {
+        def frontendDir = file('../frontend_demo')
+        if (!frontendDir.exists()) {
+            throw new GradleException("Frontend directory not found at ${frontendDir.absolutePath}")
+        }
+        
+        // 下载OpenAPI规范
+        def openapiUrl = 'http://localhost:8080/v3/api-docs'
+        def openapiFile = new File(frontendDir, 'openapi.json')
+        
+        try {
+            println "Downloading OpenAPI spec from ${openapiUrl}..."
+            def connection = new URL(openapiUrl).openConnection()
+            connection.setRequestProperty('User-Agent', 'Gradle')
+            connection.connect()
+            
+            openapiFile.withOutputStream { out ->
+                out << connection.inputStream
+            }
+            println "OpenAPI spec saved to ${openapiFile.absolutePath}"
+            
+            // 生成API客户端
+            println "Generating API client..."
+            if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+                exec {
+                    workingDir = frontendDir
+                    commandLine 'cmd', '/c', 'npm run api:generate'
+                }
+            } else {
+                exec {
+                    workingDir = frontendDir
+                    commandLine 'bash', '-c', 'npm run api:generate'
+                }
+            }
+            
+            println "API client generation completed successfully!"
+        } catch (Exception e) {
+            throw new GradleException("Failed to generate frontend API: ${e.message}", e)
+        }
+    }
 }

@@ -52,5 +52,13 @@ public class ResponseFactory {
         response.setMessageArgs(messageArgs);
         return ResponseEntity.ok(response);
     }
+    
+    public static <T> ResponseEntity<Response<T>> fail(T data, String messageCode) {
+        Response<T> response = new Response<>();
+        response.setSuccess(false);
+        response.setData(data);
+        response.setMessageCode(messageCode);
+        return ResponseEntity.ok(response);
+    }
 
 }
