@@ -3,7 +3,10 @@ package com.taco.backend_demo.service;
 import com.taco.backend_demo.dto.NavigationDto;
 import com.taco.backend_demo.entity.NavigationEntity;
 import com.taco.backend_demo.mapper.NavigationMapper;
+import com.taco.backend_demo.security.LoginUser;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,6 +28,52 @@ public class NavigationService {
     public List<NavigationDto> getUserNavigations(String userType) {
         List<NavigationEntity> entities = navigationMapper.selectByUserType(userType);
         return buildNavigationTree(entities);
+    }
+    
+    /**
+     * 根据用户类型和关联ID获取导航菜单 (支持更细粒度的权限控制)
+     */
+    public List<NavigationDto> getNavigationsByUserType(String userType, String associatedId) {
+        List<NavigationEntity> entities = navigationMapper.selectByUserTypeAndAssociation(userType, associatedId);
+        return buildNavigationTree(entities);
+    }
+    
+    /**
+     * 获取当前用户的导航菜单 (从SecurityContext获取用户信息)
+     */
+    public List<NavigationDto> getCurrentUserNavigations() {
+        // 获取当前认证用户的信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            // 未认证用户返回空菜单
+            return new ArrayList<>();
+        }
+        
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof LoginUser) {
+            LoginUser loginUser = (LoginUser) principal;
+            String role = loginUser.getRole();
+            String associationId = null;
+            
+            // 根据用户角色设置关联ID
+            if ("business_owner".equals(role)) {
+                associationId = loginUser.getBusinessOwnerId();
+            } else if ("employee".equals(role)) {
+                associationId = loginUser.getLocationId();
+            }
+            
+            // 特殊情况：如果用户是据点X的员工，则返回所有菜单
+            // In the demo, location "1" represents 据点X which has access to all menus
+            if ("employee".equals(role) && "1".equals(associationId)) {
+                return getAllNavigations();
+            }
+            
+            // 调用带关联ID的方法
+            return getNavigationsByUserType(role, associationId);
+        }
+        
+        // 默认返回空菜单
+        return new ArrayList<>();
     }
 
     /**

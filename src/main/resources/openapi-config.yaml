@@ -1,0 +1,260 @@
+openapi: 3.0.1
+info:
+  title: 后端演示 API
+  description: 后端演示项目的 API 文档
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+tags:
+  - name: 认证管理
+    description: 用户登录注册相关接口
+  - name: 导航管理
+    description: 菜单导航相关接口
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - 认证管理
+      summary: 用户登录
+      description: 使用邮箱和密码登录
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseLoginResponse"
+  /api/auth/refresh:
+    post:
+      tags:
+        - 认证管理
+      summary: 刷新Token
+      description: 使用refresh token获取新的access token
+      operationId: refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseLoginResponse"
+  /api/auth/logout:
+    post:
+      tags:
+        - 认证管理
+      summary: 用户登出
+      description: 清除认证信息并删除refresh token
+      operationId: logout
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseVoid"
+  /api/auth/create-test-user:
+    post:
+      tags:
+        - 认证管理
+      summary: 创建测试用户
+      description: 快速创建加密后的测试用户
+      operationId: createTestUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestUserRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseVoid"
+  /api/navigations/user:
+    get:
+      tags:
+        - 导航管理
+      summary: 获取当前用户导航菜单
+      description: 根据当前登录用户的角色和关联信息返回相应的导航菜单
+      operationId: getUserNavigations
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseListNavigationDto"
+  /api/navigations/by-type:
+    get:
+      tags:
+        - 导航管理
+      summary: 根据用户类型获取导航菜单
+      description: 根据指定的用户类型和关联ID返回相应的导航菜单
+      operationId: getNavigationsByType
+      parameters:
+        - name: userType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [employee, business_owner]
+        - name: associatedId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ResponseListNavigationDto"
+components:
+  schemas:
+    LoginRequest:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+          description: 用户角色：'employee' 或 'business_owner'
+        businessOwnerId:
+          type: string
+          description: 关联的事业者ID（仅对事业者用户有效）
+        locationId:
+          type: string
+          description: 关联的据点ID（仅对职员用户有效）
+        expiresIn:
+          type: integer
+          format: int64
+        refreshExpiresIn:
+          type: integer
+          format: int64
+    RefreshTokenRequest:
+      required:
+        - refreshToken
+      type: object
+      properties:
+        refreshToken:
+          type: string
+    CreateTestUserRequest:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    NavigationDto:
+      type: object
+      properties:
+        navigationId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        path:
+          type: string
+        icon:
+          type: string
+        sortOrder:
+          type: integer
+          format: int32
+        parentId:
+          type: integer
+          format: int64
+        enabled:
+          type: boolean
+        userType:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavigationDto"
+    ResponseLoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/LoginResponse"
+        messageCode:
+          type: string
+        messageArgs:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+    ResponseListNavigationDto:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavigationDto"
+        messageCode:
+          type: string
+        messageArgs:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+    ResponseVoid:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        messageCode:
+          type: string
+        messageArgs:
+          type: array
+          items:
+            type: string
+        message:
+          type: string

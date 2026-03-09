@@ -89,6 +89,9 @@ public class AuthController {
         loginResponse.setAccessToken(accessToken);
         loginResponse.setRefreshToken(refreshToken);
         loginResponse.setUsername(loginUser.getUsername());
+        loginResponse.setRole(loginUser.getRole());  // Add user role
+        loginResponse.setBusinessOwnerId(loginUser.getBusinessOwnerId());  // Add business owner ID
+        loginResponse.setLocationId(loginUser.getLocationId());  // Add location ID
         loginResponse.setExpiresIn(jwtUtils.getExpirationTime());
         loginResponse.setRefreshExpiresIn(jwtUtils.getRefreshExpirationTime());
 
@@ -149,7 +152,6 @@ public class AuthController {
         tokenMapper.insert(tokenEntity);
     }
 
-    @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateTestUserRequest {
@@ -158,8 +160,24 @@ public class AuthController {
         private String email;
         
         @NotBlank(message = "E014")
-        @PasswordStrength(value = PasswordStrength.StrengthLevel.MEDIUM, message = "E016")
+        @PasswordStrength(value = PasswordStrength.StrengthLevel.SIMPLE, message = "E016")
         private String password;
+        
+        public String getEmail() {
+            return email;
+        }
+        
+        public void setEmail(String email) {
+            this.email = email;
+        }
+        
+        public String getPassword() {
+            return password;
+        }
+        
+        public void setPassword(String password) {
+            this.password = password;
+        }
     }
 
     @Operation(summary = "创建测试用户", description = "快速创建加密后的测试用户")

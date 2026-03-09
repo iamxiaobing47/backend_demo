@@ -20,12 +20,24 @@ public class NavigationController {
     }
 
     /**
-     * 根据用户类型获取导航菜单
+     * 根据用户类型获取导航菜单 (保持向后兼容)
+     */
+    @GetMapping("/by-type")
+    public ResponseEntity<Response<List<NavigationDto>>> getNavigationsByType(
+            @RequestParam String userType,
+            @RequestParam(required = false) String associatedId) {
+        List<NavigationDto> navigations = navigationService.getNavigationsByUserType(userType, associatedId);
+        return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
+    }
+    
+    /**
+     * 获取当前用户的导航菜单 (基于登录信息)
      */
     @GetMapping("/user")
-    public ResponseEntity<Response<List<NavigationDto>>> getUserNavigations(
-            @RequestParam String userType) {
-        List<NavigationDto> navigations = navigationService.getUserNavigations(userType);
+    public ResponseEntity<Response<List<NavigationDto>>> getUserNavigations() {
+        // This method will be updated to extract user info from JWT and call the appropriate method
+        // For now, we'll implement the logic in the service layer to check the authenticated user
+        List<NavigationDto> navigations = navigationService.getCurrentUserNavigations();
         return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
     }
 

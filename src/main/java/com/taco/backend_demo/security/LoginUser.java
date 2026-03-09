@@ -1,7 +1,11 @@
 package com.taco.backend_demo.security;
 
+import com.taco.backend_demo.entity.BusinessUserEntity;
 import com.taco.backend_demo.entity.PasswordEntity;
+import com.taco.backend_demo.entity.StaffUserEntity;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,6 +13,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LoginUser implements UserDetails {
     
     private Long id;
@@ -18,9 +24,9 @@ public class LoginUser implements UserDetails {
     private String loginStatus;
     private Integer retryCount;
     private Collection<? extends GrantedAuthority> authorities;
-
-    public LoginUser() {
-    }
+    private String role; // 'employee' or 'business_owner'
+    private String businessOwnerId; // businessId for business owner users
+    private String locationId; // locationId for employee users
 
     public LoginUser(PasswordEntity passwordEntity, Collection<? extends GrantedAuthority> authorities) {
         this.id = passwordEntity.getPk();
@@ -30,6 +36,14 @@ public class LoginUser implements UserDetails {
         this.loginStatus = passwordEntity.getLoginStatus();
         this.retryCount = passwordEntity.getRetryCount();
         this.authorities = authorities;
+    }
+
+    public LoginUser(PasswordEntity passwordEntity, Collection<? extends GrantedAuthority> authorities, 
+                     String role, String businessOwnerId, String locationId) {
+        this(passwordEntity, authorities);
+        this.role = role;
+        this.businessOwnerId = businessOwnerId;
+        this.locationId = locationId;
     }
 
     @Override
@@ -65,5 +79,17 @@ public class LoginUser implements UserDetails {
     @Override
     public boolean isEnabled() {
         return "ACTIVE".equals(loginStatus);
+    }
+    
+    public String getRole() {
+        return role;
+    }
+    
+    public String getBusinessOwnerId() {
+        return businessOwnerId;
+    }
+    
+    public String getLocationId() {
+        return locationId;
     }
 }

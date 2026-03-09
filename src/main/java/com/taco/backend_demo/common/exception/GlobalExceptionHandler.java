@@ -4,7 +4,8 @@ import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.validation.FieldError;
@@ -27,9 +28,9 @@ import static com.taco.backend_demo.common.message.ErrorMessageCodes.E999;
  * 2. 验证异常（MethodArgumentNotValidException, ConstraintViolationException）→ 字段级验证错误
  * 3. 所有其他异常 → 统一兜底处理（隐藏敏感信息）
  */
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Response<Map<String, String>>> handleValidationExceptions(

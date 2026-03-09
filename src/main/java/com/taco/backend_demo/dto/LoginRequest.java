@@ -16,7 +16,7 @@ public class LoginRequest {
     private String email;
     
     @NotBlank(message = "E014")
-    @PasswordStrength(value = PasswordStrength.StrengthLevel.MEDIUM, message = "E016")
+    @PasswordStrength(value = PasswordStrength.StrengthLevel.SIMPLE, message = "E016")
     private String password;
 
     public String getEmail() {
