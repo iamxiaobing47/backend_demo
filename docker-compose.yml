@@ -22,3 +22,22 @@ services:
       POSTGRES_USER: admin
       # 时区设置（避免时间相关问题）
       TZ: Asia/Shanghai
+
+  azurite:
+    # 使用 Microsoft 官方 Azurite Azure Storage 模拟器镜像
+    image: mcr.microsoft.com/azure-storage/azurite
+    # 容器名称（自定义）
+    container_name: azurite
+    # 重启策略：容器退出时总是重启（除非手动停止）
+    restart: always
+    # 端口映射：宿主机端口:容器内端口
+    ports:
+      - "10000:10000"  # Blob 服务
+      - "10001:10001"  # Queue 服务
+      - "10002:10002"  # Table 服务
+    # 环境变量配置
+    environment:
+      # 时区设置（避免时间相关问题）
+      TZ: Asia/Shanghai
+    # 启动命令：运行 azurite 并启用所有服务
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
