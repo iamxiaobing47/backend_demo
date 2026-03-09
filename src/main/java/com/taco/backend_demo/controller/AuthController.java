@@ -6,6 +6,7 @@ import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
 import com.taco.backend_demo.dto.LoginRequest;
 import com.taco.backend_demo.dto.LoginResponse;
+import com.taco.backend_demo.dto.UserInfoDto;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.TokenEntity;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
@@ -212,5 +213,29 @@ public class AuthController {
         // 这里可以添加逻辑来删除数据库中的refresh token记录
 
         return ResponseFactory.success(null, NotificationMessageCodes.N021);
+    }
+    
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的基本信息")
+    @GetMapping("/user")
+    public ResponseEntity<Response<UserInfoDto>> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseFactory.fail(ErrorMessageCodes.E007); // Not authenticated
+        }
+        
+        if (authentication.getPrincipal() instanceof LoginUser) {
+            LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+            
+            UserInfoDto userInfo = new UserInfoDto(
+                    loginUser.getUsername(),  // email
+                    loginUser.getUsername(),  // username
+                    loginUser.getRole(),
+                    loginUser.getBusinessOwnerId(),
+                    loginUser.getLocationId()
+            );
+            
+            return ResponseFactory.success(userInfo, NotificationMessageCodes.N025);
+        }
+        
+        return ResponseFactory.fail(ErrorMessageCodes.E007); // Not authenticated
     }
 }
