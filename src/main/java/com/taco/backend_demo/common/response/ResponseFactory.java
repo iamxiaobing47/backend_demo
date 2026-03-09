@@ -26,7 +26,8 @@ public class ResponseFactory {
         response.setSuccess(true);
         response.setData(data);
         response.setMessageCode(messageCode);
-        response.setMessage(MessageResolver.resolveMessage(messageCode));
+        response.setMessageArgs(null);
+        // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
 
@@ -35,8 +36,8 @@ public class ResponseFactory {
         response.setSuccess(true);
         response.setData(data);
         response.setMessageCode(messageCode);
-        response.setMessageArgs(messageArgs);
-        response.setMessage(MessageResolver.resolveMessage(messageCode, (Object[]) messageArgs));
+        response.setMessageArgs(messageArgs.length > 0 ? messageArgs : null);
+        // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
 
@@ -44,7 +45,8 @@ public class ResponseFactory {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
-        response.setMessage(MessageResolver.resolveMessage(messageCode));
+        response.setMessageArgs(null);
+        // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
 
@@ -52,8 +54,8 @@ public class ResponseFactory {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
-        response.setMessageArgs(messageArgs);
-        response.setMessage(MessageResolver.resolveMessage(messageCode, (Object[]) messageArgs));
+        response.setMessageArgs(messageArgs.length > 0 ? messageArgs : null);
+        // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
     
@@ -62,7 +64,8 @@ public class ResponseFactory {
         response.setSuccess(false);
         response.setData(data);
         response.setMessageCode(messageCode);
-        response.setMessage(MessageResolver.resolveMessage(messageCode));
+        response.setMessageArgs(null);
+        // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
 
