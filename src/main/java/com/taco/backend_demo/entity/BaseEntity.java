@@ -1,8 +1,14 @@
 package com.taco.backend_demo.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 public abstract class BaseEntity {
+    @TableId(type = IdType.AUTO)
     private Long pk;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

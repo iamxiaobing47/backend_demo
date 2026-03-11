@@ -1,14 +1,18 @@
 package com.taco.backend_demo.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@AllArgsConstructor
+@NoArgsConstructor
 @TableName("view_user_info")
 public class UserInfoEntity  extends BaseEntity {
-    private Long userId;
+    private String userId;
     private String userType;
     private String email;
     private String userName;
