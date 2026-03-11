@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 @EqualsAndHashCode(callSuper = true)
 @TableName("business_staff_navigation")
 public class BusinessStaffNavigationEntity extends BaseEntity {
-    private Integer businessPk;
-    private Integer locationPk;
+    private String businessId;
+    private String locationId;
     private Long navigationPk;
 }
