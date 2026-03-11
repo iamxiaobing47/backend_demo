@@ -90,7 +90,9 @@ public class UserController {
     @Operation(summary = "获取用户信息", description = "根据用户ID获取用户信息")
     @GetMapping("/{userId}")
     public ResponseEntity<Response<UserInfoEntity>> getUser(@PathVariable String userId) {
-        UserInfoEntity userInfoEntity = vUserInfoMapper.selectById(userId);
+        LambdaQueryWrapper<UserInfoEntity> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserInfoEntity::getUserId, userId);
+        UserInfoEntity userInfoEntity = vUserInfoMapper.selectOne(queryWrapper);
         if (userInfoEntity == null) {
             throw new BusinessException(ErrorMessageCodes.E010); // User not found
         }
