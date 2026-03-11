@@ -4,8 +4,10 @@ import com.taco.backend_demo.common.message.ErrorMessageCodes;
 import com.taco.backend_demo.common.message.NotificationMessageCodes;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
+import com.taco.backend_demo.dto.user.CreateTestUserRequest;
 import com.taco.backend_demo.dto.auth.LoginRequest;
 import com.taco.backend_demo.dto.auth.LoginResponse;
+import com.taco.backend_demo.dto.auth.RefreshTokenRequest;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.TokenEntity;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
@@ -13,18 +15,12 @@ import com.taco.backend_demo.mapper.mp.TokenMapper;
 import com.taco.backend_demo.security.CustomUserDetailsService;
 import com.taco.backend_demo.security.LoginUser;
 import com.taco.backend_demo.utils.JwtUtils;
-import com.taco.backend_demo.validation.PasswordStrength;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -96,17 +92,6 @@ public class AuthController {
         return ResponseFactory.success(loginResponse, NotificationMessageCodes.N020);
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class RefreshTokenRequest {
-        @NotBlank(message = "E014")
-        private String refreshToken;
-
-        public String getRefreshToken() { return refreshToken; }
-        public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
-    }
-
     @Operation(summary = "刷新Token", description = "使用refresh token获取新的access token")
     @PostMapping("/refresh")
     public ResponseEntity<Response<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request, HttpServletResponse httpResponse) {
@@ -148,34 +133,6 @@ public class AuthController {
         tokenEntity.setRefreshToken(refreshToken);
         tokenEntity.setExpiresAt(java.time.LocalDateTime.now().plusSeconds(jwtUtils.getRefreshExpirationTime() / 1000));
         tokenMapper.insert(tokenEntity);
-    }
-
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class CreateTestUserRequest {
-        @NotBlank(message = "E014")
-        @Email(message = "E015")
-        private String email;
-        
-        @NotBlank(message = "E014")
-        @PasswordStrength(value = PasswordStrength.StrengthLevel.SIMPLE, message = "E016")
-        private String password;
-        
-        public String getEmail() {
-            return email;
-        }
-        
-        public void setEmail(String email) {
-            this.email = email;
-        }
-        
-        public String getPassword() {
-            return password;
-        }
-        
-        public void setPassword(String password) {
-            this.password = password;
-        }
     }
 
     @Operation(summary = "创建测试用户", description = "快速创建加密后的测试用户")
