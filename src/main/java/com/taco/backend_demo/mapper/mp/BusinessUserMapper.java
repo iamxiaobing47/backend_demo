@@ -9,10 +9,5 @@ import org.apache.ibatis.annotations.Delete;
 
 @Mapper
 public interface BusinessUserMapper extends BaseMapper<BusinessUserEntity> {
-    
-    @Select("SELECT * FROM business_users WHERE email = #{email}")
-    BusinessUserEntity selectByEmail(@Param("email") String email);
-    
-    @Delete("DELETE FROM business_users WHERE email = #{email}")
-    void deleteByEmail(@Param("email") String email);
+
 }

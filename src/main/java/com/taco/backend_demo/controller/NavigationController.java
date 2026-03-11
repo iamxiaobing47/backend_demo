@@ -2,7 +2,6 @@ package com.taco.backend_demo.controller;
 
 import com.taco.backend_demo.dto.navigation.NavigationDTO;
 import com.taco.backend_demo.entity.NavigationEntity;
-import com.taco.backend_demo.mapper.NavigationMapper;
 import com.taco.backend_demo.security.LoginUser;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;

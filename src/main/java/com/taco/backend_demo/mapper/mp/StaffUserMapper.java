@@ -9,10 +9,5 @@ import org.apache.ibatis.annotations.Delete;
 
 @Mapper
 public interface StaffUserMapper extends BaseMapper<StaffUserEntity> {
-    
-    @Select("SELECT * FROM staff_users WHERE email = #{email}")
-    StaffUserEntity selectByEmail(@Param("email") String email);
-    
-    @Delete("DELETE FROM staff_users WHERE email = #{email}")
-    void deleteByEmail(@Param("email") String email);
+
 }

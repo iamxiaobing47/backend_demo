@@ -9,10 +9,5 @@ import org.apache.ibatis.annotations.Delete;
 
 @Mapper
 public interface PasswordMapper extends BaseMapper<PasswordEntity> {
-    
-    @Select("SELECT * FROM passwords WHERE email = #{email}")
-    PasswordEntity selectByEmail(@Param("email") String email);
-    
-    @Delete("DELETE FROM passwords WHERE email = #{email}")
-    void deleteByEmail(@Param("email") String email);
+
 }
