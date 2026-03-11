@@ -54,7 +54,7 @@ public class ResponseFactory {
         Response<T> response = new Response<>();
         response.setSuccess(false);
         response.setMessageCode(messageCode);
-        response.setMessageArgs(messageArgs.length > 0 ? messageArgs : null);
+        response.setMessageArgs(messageArgs != null && messageArgs.length > 0 ? messageArgs : null);
         // Do not set message field to comply with API specification
         return ResponseEntity.ok(response);
     }
