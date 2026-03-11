@@ -18,10 +18,9 @@ public class CreateUserRequest {
     @NotBlank(message = "E014")
     @PasswordStrength(value = PasswordStrength.StrengthLevel.SIMPLE, message = "E016")
     private String password;
-    
-    private String role; // 'business_owner' or 'employee'
-    private String name;
-    private String position;
-    private Long businessId; // for business_owner
-    private Long locationId; // for employee
+
+    private String userId;
+    private String userType;
+    private String userName;
+    private String orgId;
 }
