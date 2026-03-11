@@ -1,13 +1,12 @@
-package com.taco.backend_demo.dto;
+package com.taco.backend_demo.dto.navigation;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class NavigationDto {
+public class NavigationDTO {
     private Long navigationId;
     private String name;
     private String path;
@@ -18,7 +17,7 @@ public class NavigationDto {
     private String userType;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private List<NavigationDto> children;
+    private List<NavigationDTO> children;
     
     public Long getNavigationId() {
         return navigationId;
@@ -100,11 +99,11 @@ public class NavigationDto {
         this.updatedAt = updatedAt;
     }
     
-    public List<NavigationDto> getChildren() {
+    public List<NavigationDTO> getChildren() {
         return children;
     }
     
-    public void setChildren(List<NavigationDto> children) {
+    public void setChildren(List<NavigationDTO> children) {
         this.children = children;
     }
 }

@@ -1,4 +1,4 @@
-package com.taco.backend_demo.dto;
+package com.taco.backend_demo.dto.auth;
 
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;

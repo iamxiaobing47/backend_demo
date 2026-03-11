@@ -1,6 +1,6 @@
 package com.taco.backend_demo.controller;
 
-import com.taco.backend_demo.dto.NavigationDto;
+import com.taco.backend_demo.dto.navigation.NavigationDTO;
 import com.taco.backend_demo.entity.NavigationEntity;
 import com.taco.backend_demo.mapper.NavigationMapper;
 import com.taco.backend_demo.security.LoginUser;
@@ -30,10 +30,10 @@ public class NavigationController {
      * 根据用户类型获取导航菜单 (保持向后兼容)
      */
     @GetMapping("/by-type")
-    public ResponseEntity<Response<List<NavigationDto>>> getNavigationsByType(
+    public ResponseEntity<Response<List<NavigationDTO>>> getNavigationsByType(
             @RequestParam String userType,
             @RequestParam(required = false) String associatedId) {
-        List<NavigationDto> navigations = getNavigationsByUserType(userType, associatedId);
+        List<NavigationDTO> navigations = getNavigationsByUserType(userType, associatedId);
         return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
     }
     
@@ -41,10 +41,10 @@ public class NavigationController {
      * 获取当前用户的导航菜单 (基于登录信息)
      */
     @GetMapping("/user")
-    public ResponseEntity<Response<List<NavigationDto>>> getUserNavigations() {
+    public ResponseEntity<Response<List<NavigationDTO>>> getUserNavigations() {
         // This method will be updated to extract user info from JWT and call the appropriate method
         // For now, we'll implement the logic in the service layer to check the authenticated user
-        List<NavigationDto> navigations = getCurrentUserNavigations();
+        List<NavigationDTO> navigations = getCurrentUserNavigations();
         return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
     }
 
@@ -52,15 +52,15 @@ public class NavigationController {
      * 获取所有导航菜单（仅启用的）
      */
     @GetMapping("/all")
-    public ResponseEntity<Response<List<NavigationDto>>> getAllNavigations() {
-        List<NavigationDto> navigations = fetchAllNavigations();
+    public ResponseEntity<Response<List<NavigationDTO>>> getAllNavigations() {
+        List<NavigationDTO> navigations = fetchAllNavigations();
         return ResponseFactory.success(navigations, "N002", "获取所有导航菜单成功");
     }
 
     /**
      * 根据用户类型和关联ID获取导航菜单 (支持更细粒度的权限控制)
      */
-    private List<NavigationDto> getNavigationsByUserType(String userType, String associatedId) {
+    private List<NavigationDTO> getNavigationsByUserType(String userType, String associatedId) {
         List<NavigationEntity> entities = navigationMapper.selectByUserTypeAndAssociation(userType, associatedId);
         return buildNavigationTree(entities);
     }
@@ -68,7 +68,7 @@ public class NavigationController {
     /**
      * 获取当前用户的导航菜单 (从SecurityContext获取用户信息)
      */
-    private List<NavigationDto> getCurrentUserNavigations() {
+    private List<NavigationDTO> getCurrentUserNavigations() {
         // 获取当前认证用户的信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -105,7 +105,7 @@ public class NavigationController {
     /**
      * 获取所有导航菜单（仅启用的）
      */
-    private List<NavigationDto> fetchAllNavigations() {
+    private List<NavigationDTO> fetchAllNavigations() {
         List<NavigationEntity> entities = navigationMapper.selectAllEnabled();
         return buildNavigationTree(entities);
     }
@@ -113,24 +113,24 @@ public class NavigationController {
     /**
      * 构建导航树形结构
      */
-    private List<NavigationDto> buildNavigationTree(List<NavigationEntity> entities) {
+    private List<NavigationDTO> buildNavigationTree(List<NavigationEntity> entities) {
         // 创建所有节点的映射
-        List<NavigationDto> navDtos = entities.stream().map(entity -> {
-            NavigationDto dto = new NavigationDto();
+        List<NavigationDTO> navDtos = entities.stream().map(entity -> {
+            NavigationDTO dto = new NavigationDTO();
             BeanUtils.copyProperties(entity, dto);
             return dto;
         }).collect(Collectors.toList());
 
         // 创建父节点列表（parentId为null或0的是根节点）
-        List<NavigationDto> rootNodes = new ArrayList<>();
+        List<NavigationDTO> rootNodes = new ArrayList<>();
         
         // 为每个节点找到其子节点
-        for (NavigationDto node : navDtos) {
+        for (NavigationDTO node : navDtos) {
             if (node.getParentId() == null || node.getParentId() == 0) {
                 rootNodes.add(node);
             } else {
                 // 查找父节点并添加到其children列表中
-                NavigationDto parentNode = findById(navDtos, node.getParentId());
+                NavigationDTO parentNode = findById(navDtos, node.getParentId());
                 if (parentNode != null) {
                     if (parentNode.getChildren() == null) {
                         parentNode.setChildren(new ArrayList<>());
@@ -146,8 +146,8 @@ public class NavigationController {
     /**
      * 根据ID查找节点
      */
-    private NavigationDto findById(List<NavigationDto> nodes, Long id) {
-        for (NavigationDto node : nodes) {
+    private NavigationDTO findById(List<NavigationDTO> nodes, Long id) {
+        for (NavigationDTO node : nodes) {
             if (node.getNavigationId().equals(id)) {
                 return node;
             }

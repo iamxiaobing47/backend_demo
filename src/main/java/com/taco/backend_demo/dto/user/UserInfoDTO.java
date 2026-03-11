@@ -1,6 +1,6 @@
-package com.taco.backend_demo.dto;
+package com.taco.backend_demo.dto.user;
 
-public class UserInfoDto {
+public class UserInfoDTO {
     private String email;
     private String username;
     private String role;
@@ -8,10 +8,10 @@ public class UserInfoDto {
     private String locationId;
     
     // 无参构造函数
-    public UserInfoDto() {}
+    public UserInfoDTO() {}
     
     // 全参构造函数
-    public UserInfoDto(String email, String username, String role, String businessOwnerId, String locationId) {
+    public UserInfoDTO(String email, String username, String role, String businessOwnerId, String locationId) {
         this.email = email;
         this.username = username;
         this.role = role;
