@@ -1,19 +1,20 @@
 package com.taco.backend_demo.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.taco.backend_demo.common.message.ErrorMessageCodes;
 import com.taco.backend_demo.common.message.NotificationMessageCodes;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
-import com.taco.backend_demo.dto.user.CreateTestUserRequest;
 import com.taco.backend_demo.dto.auth.LoginRequest;
 import com.taco.backend_demo.dto.auth.LoginResponse;
 import com.taco.backend_demo.dto.auth.RefreshTokenRequest;
+import com.taco.backend_demo.dto.user.UserInfo;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.TokenEntity;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
 import com.taco.backend_demo.mapper.mp.TokenMapper;
 import com.taco.backend_demo.security.CustomUserDetailsService;
-import com.taco.backend_demo.security.LoginUser;
+import com.taco.backend_demo.dto.auth.LoginUserInfo;
 import com.taco.backend_demo.utils.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +29,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E006;
 
 @Tag(name = "认证管理", description = "用户登录注册相关接口")
 @RestController
@@ -59,76 +63,63 @@ public class AuthController {
     @Operation(summary = "用户登录", description = "使用邮箱和密码登录")
     @PostMapping("/login")
     public ResponseEntity<Response<LoginResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        Authentication authentication = customAuthenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
 
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-        String accessToken = jwtUtils.generateToken(loginUser);
-        String refreshToken = jwtUtils.generateRefreshToken(loginUser.getUsername());
+        // 1. 验证用户登录信息
+        Authentication authentication = customAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        userDetailsService.updateLastLogin(request.getEmail());
-        userDetailsService.resetRetryCount(request.getEmail());
+        // 2. 登录成功，更新用户登录信息
+        LoginUserInfo loginUserInfo = (LoginUserInfo) authentication.getPrincipal();
+        PasswordEntity passwordEntity = loginUserInfo.getPasswordEntity();
+        passwordEntity.setRetryCount(0);
+        passwordMapper.updateById(passwordEntity);
 
-        saveRefreshToken(loginUser.getUsername(), refreshToken);
+        // 3. 生成JWT Token
+        UserInfo userInfo = new UserInfo(loginUserInfo);
+        String accessToken = jwtUtils.generateAccessToken(userInfo);
+        String refreshToken = jwtUtils.generateRefreshToken(userInfo);
 
-        // 设置refreshToken cookie
+        // 4. 保存refreshToken到数据库
+        saveRefreshToken(loginUserInfo.getUsername(), refreshToken);
+
+        // 5. 设置refreshToken cookie
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false); // 开发环境设为false，生产环境应为true
-        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setPath("/api/auth/refresh");
         refreshTokenCookie.setMaxAge((int) (jwtUtils.getRefreshExpirationTime() / 1000)); // 转换为秒
         httpResponse.addCookie(refreshTokenCookie);
-        
-        // Debug log
-        logger.debug("Setting refreshToken cookie: {}", refreshToken);
 
+        // 6. 返回accessToken和userInfo
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setAccessToken(accessToken);
-        loginResponse.setRefreshToken(refreshToken);
-        loginResponse.setUsername(loginUser.getUsername());
-        loginResponse.setRole(loginUser.getRole());  // Add user role
-        loginResponse.setBusinessOwnerId(loginUser.getBusinessOwnerId());  // Add business owner ID
-        loginResponse.setLocationId(loginUser.getLocationId());  // Add location ID
-        loginResponse.setExpiresIn(jwtUtils.getExpirationTime());
-        loginResponse.setRefreshExpiresIn(jwtUtils.getRefreshExpirationTime());
-
-        return ResponseFactory.success(loginResponse, NotificationMessageCodes.N020);
+        loginResponse.setUserInfo(userInfo);
+        return ResponseFactory.success(loginResponse);
     }
 
     @Operation(summary = "刷新Token", description = "使用refresh token获取新的access token")
     @PostMapping("/refresh")
     public ResponseEntity<Response<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request, HttpServletResponse httpResponse) {
+        // 1. 验证refreshToken
         String refreshToken = request.getRefreshToken();
-
         if (!jwtUtils.validateToken(refreshToken)) {
-            return ResponseFactory.fail(ErrorMessageCodes.E006);
+            return ResponseFactory.fail(E006);
         }
 
-        String username = jwtUtils.extractUsername(refreshToken);
-        LoginUser loginUser = userDetailsService.loadUserByUsername(username);
+        // 2. 从refreshToken中提取email
+        String email = jwtUtils.extractEmail(refreshToken);
+        UserInfo userInfo = (UserInfo)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        String newAccessToken = jwtUtils.generateToken(loginUser);
-        String newRefreshToken = jwtUtils.generateRefreshToken(username);
-
-        saveRefreshToken(username, newRefreshToken);
+        // 3. 生成新的accessToken
+        String newRefreshToken = jwtUtils.generateRefreshToken(userInfo);
 
         // 更新refreshToken cookie
         Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false); // 开发环境设为false，生产环境应为true
-        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setPath("/api/auth/refresh");
         refreshTokenCookie.setMaxAge((int) (jwtUtils.getRefreshExpirationTime() / 1000)); // 转换为秒
         httpResponse.addCookie(refreshTokenCookie);
-
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setAccessToken(newAccessToken);
-        loginResponse.setRefreshToken(newRefreshToken);
-        loginResponse.setUsername(loginUser.getUsername());
-        loginResponse.setExpiresIn(jwtUtils.getExpirationTime());
-        loginResponse.setRefreshExpiresIn(jwtUtils.getRefreshExpirationTime());
-
-        return ResponseFactory.success(loginResponse, NotificationMessageCodes.N023);
+        return ResponseFactory.success(new LoginResponse());
     }
 
     private void saveRefreshToken(String email, String refreshToken) {
@@ -139,23 +130,6 @@ public class AuthController {
         tokenMapper.insert(tokenEntity);
     }
 
-    @Operation(summary = "创建测试用户", description = "快速创建加密后的测试用户")
-    @PostMapping("/create-test-user")
-    public ResponseEntity<Response<Void>> createTestUser(@Valid @RequestBody CreateTestUserRequest request) {
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-
-        PasswordEntity passwordEntity = new PasswordEntity();
-        passwordEntity.setEmail(request.getEmail());
-        passwordEntity.setPasswordHash(hashedPassword);
-        passwordEntity.setIsLocked(false);
-        passwordEntity.setLoginStatus("ACTIVE");
-        passwordEntity.setRetryCount(0);
-
-        passwordMapper.insert(passwordEntity);
-
-        return ResponseFactory.success(null, NotificationMessageCodes.N024);
-    }
-
     @Operation(summary = "用户登出", description = "清除认证信息并删除refresh token")
     @PostMapping("/logout")
     public ResponseEntity<Response<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
@@ -163,13 +137,13 @@ public class AuthController {
         Cookie refreshTokenCookie = new Cookie("refreshToken", null);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false);
-        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setPath("/api/auth/refresh");
         refreshTokenCookie.setMaxAge(0); // 立即过期
         response.addCookie(refreshTokenCookie);
 
-        // 从数据库删除refresh token（如果需要）
-        // 这里可以添加逻辑来删除数据库中的refresh token记录
-
+        // 从数据库删除refresh token
+        UserInfo userInfo = (UserInfo)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        tokenMapper.delete(new LambdaQueryWrapper<TokenEntity>().eq(TokenEntity::getEmail, userInfo.getEmail()));
         return ResponseFactory.success(null, NotificationMessageCodes.N021);
     }
 }
