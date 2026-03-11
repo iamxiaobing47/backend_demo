@@ -1,4 +1,4 @@
-package com.taco.backend_demo.test;
+package com.taco.backend_demo.controller;
 
 
 import com.taco.backend_demo.common.response.Response;
