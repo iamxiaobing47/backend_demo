@@ -129,7 +129,7 @@ public class SecurityConfig {
                 // 权限规则配置
                 .authorizeHttpRequests(auth -> auth
                         // 放行认证相关接口
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/test/**").permitAll()
                         // 放行Swagger文档接口
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         // 其他所有请求需要认证

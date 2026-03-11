@@ -21,7 +21,7 @@ public class PasswordStrengthValidator implements ConstraintValidator<PasswordSt
         
         switch (level) {
             case SIMPLE:
-                return password.length() >= 6;
+                return password.length() >= 1;
             case MEDIUM:
                 return password.length() >= 8 && 
                        Pattern.compile("[a-z]").matcher(password).find() && 

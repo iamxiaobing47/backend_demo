@@ -1,5 +1,6 @@
 package com.taco.backend_demo.utils;
 
+import com.taco.backend_demo.dto.user.UserInfo;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,12 +21,12 @@ public class JwtUtils {
     private String secret;
 
     @Value("${jwt.expiration:86400000}")
-    private Long expiration;
+    private Long accessExpiration;
 
     @Value("${jwt.refresh-expiration:604800000}")
     private Long refreshExpiration;
 
-    public String extractUsername(String token) {
+    public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -50,26 +51,22 @@ public class JwtUtils {
         return extractExpiration(token).before(new Date());
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserInfo loginUserInfo) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername(), expiration);
+        claims.put("userId", loginUserInfo.getUserId());
+        return createToken(claims, loginUserInfo.getEmail(), accessExpiration);
     }
 
-    public String generateToken(String username) {
+    public String generateRefreshToken(UserInfo loginUserInfo) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username, expiration);
-    }
-
-    public String generateRefreshToken(String username) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("type", "refresh");
-        return createToken(claims, username, refreshExpiration);
+        claims.put("userId", loginUserInfo.getUserId());
+        return createToken(claims, loginUserInfo.getEmail(), refreshExpiration);
     }
 
     private String createToken(Map<String, Object> claims, String subject, Long expirationTime) {
         return Jwts.builder()
-                .claims(claims)
                 .subject(subject)
+                .claims(claims)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSigningKey())
@@ -82,7 +79,7 @@ public class JwtUtils {
     }
 
     public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
+        final String username = extractEmail(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
@@ -99,7 +96,7 @@ public class JwtUtils {
     }
 
     public Long getExpirationTime() {
-        return expiration;
+        return accessExpiration;
     }
 
     public Long getRefreshExpirationTime() {

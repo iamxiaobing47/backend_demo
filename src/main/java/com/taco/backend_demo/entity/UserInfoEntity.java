@@ -15,4 +15,15 @@ public class UserInfoEntity  extends BaseEntity {
     private Long orgId;
     private String orgName;
     private String orgType;
+
+
+    public UserInfoEntity(UserInfoEntity userInfo) {
+        this.userId = userInfo.getUserId();
+        this.userType = userInfo.getUserType();
+        this.email = userInfo.getEmail();
+        this.userName = userInfo.getUserName();
+        this.orgId = userInfo.getOrgId();
+        this.orgName = userInfo.getOrgName();
+        this.orgType = userInfo.getOrgType();
+    }
 }
