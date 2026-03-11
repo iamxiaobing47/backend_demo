@@ -7,11 +7,10 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @TableName("view_user_info")
-public class UserInfoEntity  extends BaseEntity {
+public class UserInfoEntity {
     private String userId;
     private String userType;
     private String email;
