@@ -15,7 +15,7 @@ public class UserInfoEntity {
     private String userType;
     private String email;
     private String userName;
-    private Long orgId;
+    private String orgId;
     private String orgName;
     private String orgType;
 

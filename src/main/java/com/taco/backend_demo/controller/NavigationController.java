@@ -1,19 +1,20 @@
 package com.taco.backend_demo.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.taco.backend_demo.dto.navigation.NavigationDTO;
+import com.taco.backend_demo.dto.user.UserInfo;
+import com.taco.backend_demo.entity.BusinessStaffNavigationEntity;
 import com.taco.backend_demo.entity.NavigationEntity;
-import com.taco.backend_demo.dto.auth.LoginUserInfo;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
+import com.taco.backend_demo.mapper.mp.BusinessStaffNavigationMapper;
 import com.taco.backend_demo.mapper.mp.NavigationMapper;
-import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,137 +22,112 @@ import java.util.stream.Collectors;
 public class NavigationController {
 
     private final NavigationMapper navigationMapper;
+    private final BusinessStaffNavigationMapper businessStaffNavigationMapper;
 
-    public NavigationController(NavigationMapper navigationMapper) {
+    public NavigationController(NavigationMapper navigationMapper, BusinessStaffNavigationMapper businessStaffNavigationMapper) {
         this.navigationMapper = navigationMapper;
+        this.businessStaffNavigationMapper = businessStaffNavigationMapper;
     }
 
-//    /**
-//     * 根据用户类型获取导航菜单 (保持向后兼容)
-//     */
-//    @GetMapping("/by-type")
-//    public ResponseEntity<Response<List<NavigationDTO>>> getNavigationsByType(
-//            @RequestParam String userType,
-//            @RequestParam(required = false) String associatedId) {
-//        List<NavigationDTO> navigations = getNavigationsByUserType(userType, associatedId);
-//        return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
-//    }
-//
-//    /**
-//     * 获取当前用户的导航菜单 (基于登录信息)
-//     */
-//    @GetMapping("/user")
-//    public ResponseEntity<Response<List<NavigationDTO>>> getUserNavigations() {
-//        // This method will be updated to extract user info from JWT and call the appropriate method
-//        // For now, we'll implement the logic in the service layer to check the authenticated user
-//        List<NavigationDTO> navigations = getCurrentUserNavigations();
-//        return ResponseFactory.success(navigations, "N001", "获取用户导航菜单成功");
-//    }
+    /**
+     * 获取当前用户的导航菜单 (基于登录信息)
+     */
+    @GetMapping("/user")
+    public ResponseEntity<Response<List<NavigationDTO>>> getUserNavigations() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserInfo userInfo = (UserInfo) authentication.getPrincipal();
 
-//    /**
-//     * 获取所有导航菜单（仅启用的）
-//     */
-//    @GetMapping("/all")
-//    public ResponseEntity<Response<List<NavigationDTO>>> getAllNavigations() {
-//        List<NavigationDTO> navigations = fetchAllNavigations();
-//        return ResponseFactory.success(navigations, "N002", "获取所有导航菜单成功");
-//    }
-//
-//    /**
-//     * 根据用户类型和关联ID获取导航菜单 (支持更细粒度的权限控制)
-//     */
-//    private List<NavigationDTO> getNavigationsByUserType(String userType, String associatedId) {
-//        List<NavigationEntity> entities = navigationMapper.selectByUserTypeAndAssociation(userType, associatedId);
-//        return buildNavigationTree(entities);
-//    }
-//
-//    /**
-//     * 获取当前用户的导航菜单 (从SecurityContext获取用户信息)
-//     */
-//    private List<NavigationDTO> getCurrentUserNavigations() {
-//        // 获取当前认证用户的信息
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            // 未认证用户返回空菜单
-//            return new ArrayList<>();
-//        }
-//
-//        Object principal = authentication.getPrincipal();
-//        if (principal instanceof LoginUserInfo loginUserInfo) {
-//            String role = loginUserInfo.getRole();
-//            String associationId = null;
-//
-//            // 根据用户角色设置关联ID
-//            if ("business_owner".equals(role)) {
-//                associationId = loginUserInfo.getBusinessOwnerId();
-//            } else if ("employee".equals(role)) {
-//                associationId = loginUserInfo.getLocationId();
-//            }
-//
-//            // 特殊情况：如果用户是据点X的员工，则返回所有菜单
-//            // In the demo, location "1" represents 据点X which has access to all menus
-//            if ("employee".equals(role) && "1".equals(associationId)) {
-//                return fetchAllNavigations();
-//            }
-//
-//            // 调用带关联ID的方法
-//            return getNavigationsByUserType(role, associationId);
-//        }
-//
-//        // 默认返回空菜单
-//        return new ArrayList<>();
-//    }
-//
-//    /**
-//     * 获取所有导航菜单（仅启用的）
-//     */
-//    private List<NavigationDTO> fetchAllNavigations() {
-//        List<NavigationEntity> entities = navigationMapper.selectAllEnabled();
-//        return buildNavigationTree(entities);
-//    }
-//
-//    /**
-//     * 构建导航树形结构
-//     */
-//    private List<NavigationDTO> buildNavigationTree(List<NavigationEntity> entities) {
-//        // 创建所有节点的映射
-//        List<NavigationDTO> navDtos = entities.stream().map(entity -> {
-//            NavigationDTO dto = new NavigationDTO();
-//            BeanUtils.copyProperties(entity, dto);
-//            return dto;
-//        }).collect(Collectors.toList());
-//
-//        // 创建父节点列表（parentId为null或0的是根节点）
-//        List<NavigationDTO> rootNodes = new ArrayList<>();
-//
-//        // 为每个节点找到其子节点
-//        for (NavigationDTO node : navDtos) {
-//            if (node.getParentId() == null || node.getParentId() == 0) {
-//                rootNodes.add(node);
-//            } else {
-//                // 查找父节点并添加到其children列表中
-//                NavigationDTO parentNode = findById(navDtos, node.getParentId());
-//                if (parentNode != null) {
-//                    if (parentNode.getChildren() == null) {
-//                        parentNode.setChildren(new ArrayList<>());
-//                    }
-//                    parentNode.getChildren().add(node);
-//                }
-//            }
-//        }
-//
-//        return rootNodes;
-//    }
-//
-//    /**
-//     * 根据ID查找节点
-//     */
-//    private NavigationDTO findById(List<NavigationDTO> nodes, Long id) {
-//        for (NavigationDTO node : nodes) {
-//            if (node.getNavigationId().equals(id)) {
-//                return node;
-//            }
-//        }
-//        return null;
-//    }
+        // 根据用户类型和组织ID查询关联的导航菜单
+        String orgId = userInfo.getOrgId();
+        String userType = userInfo.getUserType();
+        
+        QueryWrapper<BusinessStaffNavigationEntity> queryWrapper = new QueryWrapper<>();
+        if ("BUSINESS_USER".equals(userType)) {
+            queryWrapper.eq("business_id", orgId);
+        } else if ("STAFF_USER".equals(userType)) {
+            queryWrapper.eq("location_id", orgId);
+        }
+        List<BusinessStaffNavigationEntity> businessStaffNavigations = businessStaffNavigationMapper.selectList(queryWrapper);
+        
+        // 提取所有 navigationPk
+        List<Long> navigationPks = businessStaffNavigations.stream()
+                .map(BusinessStaffNavigationEntity::getNavigationPk)
+                .collect(Collectors.toList());
+        
+        // 查询对应的导航菜单
+        QueryWrapper<NavigationEntity> navigationQueryWrapper = new QueryWrapper<>();
+        navigationQueryWrapper.in("pk", navigationPks);
+        navigationQueryWrapper.orderByAsc("sort_order");
+        
+        List<NavigationEntity> navigationEntities = navigationMapper.selectList(navigationQueryWrapper);
+        
+        // 转换为 DTO 并构建树形结构
+        List<NavigationDTO> navigationDTOs = navigationEntities.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        
+        // 构建树形结构
+        List<NavigationDTO> rootMenus = buildTree(navigationDTOs);
+
+        return ResponseFactory.success(rootMenus);
+    }
+    
+    private NavigationDTO convertToDTO(NavigationEntity entity) {
+        NavigationDTO dto = new NavigationDTO();
+        dto.setPk(entity.getPk());
+        dto.setChineseName(entity.getChineseName());
+        dto.setEnglishName(entity.getEnglishName());
+        dto.setPath(entity.getPath());
+        dto.setIcon(entity.getIcon());
+        dto.setSortOrder(entity.getSortOrder());
+        dto.setParentId(entity.getParentId());
+        dto.setCreatedAt(entity.getCreatedAt());
+        dto.setUpdatedAt(entity.getUpdatedAt());
+        return dto;
+    }
+    
+    private List<NavigationDTO> buildTree(List<NavigationDTO> menus) {
+        Map<Long, NavigationDTO> menuMap = new HashMap<>();
+        List<NavigationDTO> rootMenus = new ArrayList<>();
+        
+        // 将所有菜单放入 map 中
+        for (NavigationDTO menu : menus) {
+            menuMap.put(menu.getPk(), menu);
+        }
+        
+        // 构建父子关系
+        for (NavigationDTO menu : menus) {
+            if (menu.getParentId() == null || menu.getParentId() == 0) {
+                // 根节点
+                rootMenus.add(menu);
+            } else {
+                // 找到父节点
+                NavigationDTO parent = menuMap.get(menu.getParentId());
+                if (parent != null) {
+                    if (parent.getChildren() == null) {
+                        parent.setChildren(new ArrayList<>());
+                    }
+                    parent.getChildren().add(menu);
+                }
+            }
+        }
+        
+        // 按排序字段排序
+        rootMenus.sort(Comparator.comparing(NavigationDTO::getSortOrder, Comparator.nullsLast(Integer::compareTo)));
+        for (NavigationDTO root : rootMenus) {
+            sortChildren(root);
+        }
+        
+        return rootMenus;
+    }
+    
+    private void sortChildren(NavigationDTO menu) {
+        if (menu.getChildren() != null && !menu.getChildren().isEmpty()) {
+            menu.getChildren().sort(Comparator.comparing(NavigationDTO::getSortOrder, Comparator.nullsLast(Integer::compareTo)));
+            for (NavigationDTO child : menu.getChildren()) {
+                sortChildren(child);
+            }
+        }
+    }
+
 }
