@@ -15,8 +15,4 @@ public class NavigationEntity extends BaseEntity {
     private String icon;
     private Integer sortOrder;
     private Long parentId;
-    
-    // 覆盖BaseEntity中的LocalDateTime字段，因为navigation表使用timestamptz
-    private OffsetDateTime createdAt;
-    private OffsetDateTime updatedAt;
 }

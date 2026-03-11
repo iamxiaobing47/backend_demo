@@ -11,10 +11,6 @@ import java.time.LocalDateTime;
 @TableName("token")
 public class TokenEntity extends BaseEntity {
     private String email;
-    
-    @TableField("refresh_token")
     private String refreshToken;
-    
-    @TableField("expires_at")
     private LocalDateTime expiresAt;
 }

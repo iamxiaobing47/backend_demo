@@ -6,7 +6,7 @@ import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
 import com.taco.backend_demo.dto.user.CreateUserRequest;
 import com.taco.backend_demo.dto.user.UpdateUserRequest;
-import com.taco.backend_demo.dto.user.UserInfoDTO;
+import com.taco.backend_demo.entity.UserInfoEntity;
 import com.taco.backend_demo.entity.BusinessUserEntity;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.StaffUserEntity;
@@ -40,7 +40,7 @@ public class UserController {
 
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的基本信息")
     @GetMapping("/current")
-    public ResponseEntity<Response<UserInfoDTO>> getCurrentUser(Authentication authentication) {
+    public ResponseEntity<Response<UserInfoEntity>> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseFactory.fail(ErrorMessageCodes.E007); // Not authenticated
         }
@@ -48,7 +48,7 @@ public class UserController {
         if (authentication.getPrincipal() instanceof LoginUser) {
             LoginUser loginUser = (LoginUser) authentication.getPrincipal();
             
-            UserInfoDTO userInfo = new UserInfoDTO(
+            UserInfoEntity userInfo = new UserInfoEntity(
                     loginUser.getUsername(),  // email
                     loginUser.getUsername(),  // username
                     loginUser.getRole(),
@@ -99,7 +99,7 @@ public class UserController {
 
     @Operation(summary = "获取用户信息", description = "根据用户ID获取用户信息")
     @GetMapping("/{userId}")
-    public ResponseEntity<Response<UserInfoDTO>> getUser(@PathVariable Long userId, Authentication authentication) {
+    public ResponseEntity<Response<UserInfoEntity>> getUser(@PathVariable Long userId, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseFactory.fail(ErrorMessageCodes.E007);
         }
@@ -114,7 +114,7 @@ public class UserController {
                 return ResponseFactory.fail(ErrorMessageCodes.E010); // User not found
             }
             
-            UserInfoDTO userInfo = new UserInfoDTO();
+            UserInfoEntity userInfo = new UserInfoEntity();
             userInfo.setEmail(email);
             userInfo.setUsername(email);
             userInfo.setRole(loginUser.getRole());
