@@ -1,52 +1,15 @@
 package com.taco.backend_demo.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@TableName("business_users")
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("business_user")
 public class BusinessUserEntity extends BaseEntity {
     private Long businessUserId;
-    private Long businessId;
+    private Integer businessId;
     private String email;
     private String name;
-    private String position;
-    
-    public Long getBusinessUserId() {
-        return businessUserId;
-    }
-    
-    public void setBusinessUserId(Long businessUserId) {
-        this.businessUserId = businessUserId;
-    }
-    
-    public Long getBusinessId() {
-        return businessId;
-    }
-    
-    public void setBusinessId(Long businessId) {
-        this.businessId = businessId;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getPosition() {
-        return position;
-    }
-    
-    public void setPosition(String position) {
-        this.position = position;
-    }
 }

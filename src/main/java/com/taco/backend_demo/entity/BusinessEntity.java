@@ -6,10 +6,9 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("businesses")
+@TableName("business")
 public class BusinessEntity extends BaseEntity {
-    private Long businessId;
-    private Long corporationId;
+    private Integer businessId;
     private String name;
-    private String businessNumber;
+    private String address;
 }

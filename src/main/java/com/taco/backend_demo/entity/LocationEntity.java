@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("locations")
+@TableName("staff_location")
 public class LocationEntity extends BaseEntity {
     private Long locationId;
     private String name;
