@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.taco.backend_demo.common.message.ErrorMessageCodes.E008;
+
 @Tag(name = "用户管理", description = "用户信息相关接口")
 @RestController
 @RequestMapping("/api/users")
@@ -146,6 +148,49 @@ public class UserController {
         return ResponseFactory.success(null);
     }
 
+
+    @Operation(summary = "分页查询用户列表", description = "根据分页参数和筛选条件查询用户列表")
+    @PostMapping("/page")
+    public ResponseEntity<Response<PageResult<UserInfo>>> pageUsers(@Valid @RequestBody PageUserQueryRequest request) {
+        // 1. 计算分页参数（PostgreSQL 语法：LIMIT ? OFFSET ?）
+        int limit = request.getPageSize();
+        int offset = (request.getPageNum() - 1) * request.getPageSize();
+
+        // 2. 构建查询条件
+        LambdaQueryWrapper<UserInfoEntity> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 用户类型过滤
+        if (request.getUserType() != null && !request.getUserType().isEmpty()) {
+            queryWrapper.eq(UserInfoEntity::getUserType, request.getUserType());
+        }
+
+        // 邮箱模糊查询
+        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+            queryWrapper.like(UserInfoEntity::getEmail, request.getEmail());
+        }
+
+        // 用户名模糊查询
+        if (request.getUserName() != null && !request.getUserName().isEmpty()) {
+            queryWrapper.like(UserInfoEntity::getUserName, request.getUserName());
+        }
+
+        // 3. 查询总数
+        Long total = vUserInfoMapper.selectCount(queryWrapper);
+
+        // 4. 分页查询数据（PostgreSQL 兼容的 LIMIT/OFFSET 语法）
+        queryWrapper.last("LIMIT " + limit + " OFFSET " + offset);
+        List<UserInfoEntity> userInfoEntities = vUserInfoMapper.selectList(queryWrapper);
+
+        // 5. 构建返回结果
+        PageResult<UserInfo> result = PageResult.of(
+            userInfoEntities.stream().map(UserInfo::new).collect(Collectors.toList()),
+            total,
+            request.getPageNum(),
+            request.getPageSize()
+        );
+
+        return ResponseFactory.success(result);
+    }
 
     @Operation(summary = "删除用户", description = "删除当前用户")
     @DeleteMapping
