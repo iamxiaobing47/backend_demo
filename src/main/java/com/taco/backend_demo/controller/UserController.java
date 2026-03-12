@@ -48,15 +48,15 @@ public class UserController {
     @Operation(summary = "创建用户", description = "创建新用户")
     @PostMapping("/create")
     public ResponseEntity<Response<Void>> createUser(@Valid @RequestBody CreateUserRequest request) {
-        // 检查邮箱是否已存在
+        // 1. 验证邮箱唯一性：检查该邮箱是否已被注册
         QueryWrapper<PasswordEntity> passwordQuery = new QueryWrapper<>();
         passwordQuery.eq("email", request.getEmail());
         PasswordEntity existingPassword = passwordMapper.selectOne(passwordQuery);
         if (existingPassword != null) {
-            throw new BusinessException(ErrorMessageCodes.E008); // User already exists
+            throw new BusinessException(ErrorMessageCodes.E008);
         }
 
-        // 创建密码记录
+        // 2. 创建密码实体：存储加密后的密码和账户状态信息
         PasswordEntity passwordEntity = new PasswordEntity();
         passwordEntity.setEmail(request.getEmail());
         passwordEntity.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -65,7 +65,9 @@ public class UserController {
         passwordEntity.setRetryCount(0);
         passwordMapper.insert(passwordEntity);
 
-        // 根据角色创建对应的用户记录
+        // 3. 根据用户类型创建对应的业务用户实体：
+        //    - BUSINESS_USER: 商户用户，关联商户ID
+        //    - STAFF_USER: 员工用户，关联位置ID
         if ("BUSINESS_USER".equals(request.getUserType())) {
             BusinessUserEntity businessUser = new BusinessUserEntity();
             businessUser.setEmail(request.getEmail());
@@ -81,7 +83,7 @@ public class UserController {
             staffUser.setStaffUserId(request.getUserId());
             staffUserMapper.insert(staffUser);
         } else {
-            throw new BusinessException(ErrorMessageCodes.E010); // Parameter error
+            throw new BusinessException(ErrorMessageCodes.E010);
         }
 
         return ResponseFactory.success(null);
@@ -90,11 +92,12 @@ public class UserController {
     @Operation(summary = "获取用户信息", description = "根据用户ID获取用户信息")
     @GetMapping("/{userId}")
     public ResponseEntity<Response<UserInfoEntity>> getUser(@PathVariable String userId) {
+        // 1. 查询用户信息视图：通过用户ID获取完整的用户信息
         LambdaQueryWrapper<UserInfoEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(UserInfoEntity::getUserId, userId);
         UserInfoEntity userInfoEntity = vUserInfoMapper.selectOne(queryWrapper);
         if (userInfoEntity == null) {
-            throw new BusinessException(ErrorMessageCodes.E010); // User not found
+            throw new BusinessException(ErrorMessageCodes.E010);
         }
         return ResponseFactory.success(userInfoEntity);
     }
@@ -102,11 +105,13 @@ public class UserController {
     @Operation(summary = "批量查询用户信息", description = "根据用户ID列表批量查询用户信息")
     @PostMapping("/batch")
     public ResponseEntity<Response<List<UserInfo>>> batchGetUsers(@Valid @RequestBody BatchUserQueryRequest request) {
+        // 1. 参数验证：检查用户ID列表是否为空
         List<String> userIds = request.getUserIds();
         if (userIds == null || userIds.isEmpty()) {
             return ResponseFactory.success(null);
         }
 
+        // 2. 批量查询用户信息：通过IN查询获取多个用户的完整信息
         QueryWrapper<UserInfoEntity> queryWrapper = new QueryWrapper<>();
         queryWrapper.in("user_id", userIds);
         List<UserInfoEntity> userInfoEntities = vUserInfoMapper.selectList(queryWrapper);
@@ -118,6 +123,9 @@ public class UserController {
     @Operation(summary = "更新用户信息", description = "更新当前用户信息")
     @PutMapping
     public ResponseEntity<Response<Void>> updateUser(@Valid @RequestBody UpdateUserRequest request) {
+        // 1. 根据用户类型更新对应的用户实体信息：
+        //    - BUSINESS_USER: 更新商户用户的基本信息和商户ID
+        //    - STAFF_USER: 更新员工用户的基本信息和位置ID
         if ("BUSINESS_USER".equals(request.getUserType())) {
             LambdaQueryWrapper<BusinessUserEntity> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(BusinessUserEntity::getBusinessUserId, request.getUserId());
@@ -133,7 +141,7 @@ public class UserController {
             staffUser.setLocationId(request.getOrgId());
             staffUserMapper.updateById(staffUser);
         } else {
-            throw new BusinessException(ErrorMessageCodes.E010); // Parameter error
+            throw new BusinessException(ErrorMessageCodes.E010);
         }
         return ResponseFactory.success(null);
     }
@@ -142,10 +150,14 @@ public class UserController {
     @Operation(summary = "删除用户", description = "删除当前用户")
     @DeleteMapping
     public ResponseEntity<Response<Void>> deleteUser(@Valid @RequestBody DeleteUserRequest request) {
+        // 1. 参数验证：确保请求参数完整有效
         if (request == null || request.getUserId() == null || request.getUserType() == null) {
-            throw new BusinessException(ErrorMessageCodes.E010); // Parameter error
+            throw new BusinessException(ErrorMessageCodes.E010);
         }
 
+        // 2. 根据用户类型执行对应的删除操作：
+        //    - BUSINESS_USER: 删除商户用户记录
+        //    - STAFF_USER: 删除员工用户记录
         if ("BUSINESS_USER".equals(request.getUserType())) {
             LambdaQueryWrapper<BusinessUserEntity> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(BusinessUserEntity::getBusinessUserId, request.getUserId());
@@ -155,7 +167,7 @@ public class UserController {
             queryWrapper.eq(StaffUserEntity::getStaffUserId, request.getUserId());
             staffUserMapper.delete(queryWrapper);
         } else {
-            throw new BusinessException(ErrorMessageCodes.E010); // Parameter error
+            throw new BusinessException(ErrorMessageCodes.E010);
         }
 
         return ResponseFactory.success(null);

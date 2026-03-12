@@ -3,42 +3,44 @@ package com.taco.backend_demo.common.message;
 import java.text.MessageFormat;
 
 /**
- * Message resolver for getting formatted message text from message codes.
+ * 1. 消息解析器：根据消息码和参数解析出格式化的消息文本
+ * 2. 国际化支持：从MessageTexts中获取对应语言的消息模板
+ * 3. 容错处理：消息码不存在时返回原始码，格式化失败时返回原始模板
  */
 public final class MessageResolver {
     
-    // Prevent instantiation
+    // 1. 私有构造函数：防止外部实例化此类
     private MessageResolver() {}
     
     /**
-     * Resolves a message code to its formatted message text.
-     * @param messageCode the message code
-     * @param args the arguments to format into the message
-     * @return the formatted message text, or the message code if not found
+     * 1. 解析带参数的消息：根据消息码和参数生成格式化的消息文本
+     * @param messageCode 消息码（如E001、N001等）
+     * @param args 消息参数，用于替换消息模板中的占位符
+     * @return 格式化后的消息文本，如果消息码不存在则返回原始消息码
      */
     public static String resolveMessage(String messageCode, Object... args) {
         String messageText = MessageTexts.getMessageText(messageCode);
         if (messageText == null) {
-            return messageCode; // Return code as fallback
+            return messageCode; // 返回原始消息码作为降级处理
         }
         
         if (args.length == 0) {
             return messageText;
         }
         
-        // Format the message with arguments
+        // 1. 使用MessageFormat进行消息格式化
         try {
             return MessageFormat.format(messageText, args);
         } catch (Exception e) {
-            // If formatting fails, return the raw message text
+            // 2. 格式化失败时返回原始消息模板
             return messageText;
         }
     }
     
     /**
-     * Resolves a message code to its message text without formatting.
-     * @param messageCode the message code
-     * @return the message text, or the message code if not found
+     * 2. 解析无参数的消息：根据消息码获取原始消息文本（不进行格式化）
+     * @param messageCode 消息码（如E001、N001等）
+     * @return 消息文本，如果消息码不存在则返回原始消息码
      */
     public static String resolveMessage(String messageCode) {
         String messageText = MessageTexts.getMessageText(messageCode);

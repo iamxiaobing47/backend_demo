@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 1. 导航控制器：处理用户导航菜单的获取和管理
+ * 2. 权限控制：根据用户类型和组织ID返回对应的导航菜单
+ * 3. 树形结构：构建层级化的导航菜单结构，支持多级菜单
+ */
 @RestController
 @RequestMapping("/api/navigations")
 public class NavigationController {
@@ -24,20 +29,27 @@ public class NavigationController {
     private final NavigationMapper navigationMapper;
     private final BusinessStaffNavigationMapper businessStaffNavigationMapper;
 
+    /**
+     * 1. 构造函数注入：初始化导航相关的Mapper依赖
+     * @param navigationMapper 导航实体Mapper
+     * @param businessStaffNavigationMapper 业务-员工-导航关联Mapper
+     */
     public NavigationController(NavigationMapper navigationMapper, BusinessStaffNavigationMapper businessStaffNavigationMapper) {
         this.navigationMapper = navigationMapper;
         this.businessStaffNavigationMapper = businessStaffNavigationMapper;
     }
 
     /**
-     * 获取当前用户的导航菜单 (基于登录信息)
+     * 1. 获取用户导航菜单：根据当前登录用户返回对应的导航菜单
+     * @return 包含树形结构导航菜单的成功响应
      */
     @GetMapping("/user")
     public ResponseEntity<Response<List<NavigationDTO>>> getUserNavigations() {
+        // 1. 获取当前认证用户信息
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserInfo userInfo = (UserInfo) authentication.getPrincipal();
 
-        // 根据用户类型和组织ID查询关联的导航菜单
+        // 2. 根据用户类型和组织ID查询关联的导航菜单
         String orgId = userInfo.getOrgId();
         String userType = userInfo.getUserType();
         
@@ -49,29 +61,34 @@ public class NavigationController {
         }
         List<BusinessStaffNavigationEntity> businessStaffNavigations = businessStaffNavigationMapper.selectList(queryWrapper);
         
-        // 提取所有 navigationPk
+        // 3. 提取所有导航菜单ID
         List<Long> navigationPks = businessStaffNavigations.stream()
                 .map(BusinessStaffNavigationEntity::getNavigationPk)
                 .collect(Collectors.toList());
         
-        // 查询对应的导航菜单
+        // 4. 查询对应的导航菜单实体
         QueryWrapper<NavigationEntity> navigationQueryWrapper = new QueryWrapper<>();
         navigationQueryWrapper.in("pk", navigationPks);
         navigationQueryWrapper.orderByAsc("sort_order");
         
         List<NavigationEntity> navigationEntities = navigationMapper.selectList(navigationQueryWrapper);
         
-        // 转换为 DTO 并构建树形结构
+        // 5. 转换为DTO并构建树形结构
         List<NavigationDTO> navigationDTOs = navigationEntities.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
         
-        // 构建树形结构
+        // 6. 构建层级化的导航菜单树
         List<NavigationDTO> rootMenus = buildTree(navigationDTOs);
 
         return ResponseFactory.success(rootMenus);
     }
     
+    /**
+     * 2. 实体转换：将NavigationEntity转换为NavigationDTO
+     * @param entity 导航实体对象
+     * @return 导航DTO对象
+     */
     private NavigationDTO convertToDTO(NavigationEntity entity) {
         NavigationDTO dto = new NavigationDTO();
         dto.setPk(entity.getPk());
@@ -86,22 +103,27 @@ public class NavigationController {
         return dto;
     }
     
+    /**
+     * 3. 构建树形结构：将扁平的菜单列表转换为层级化的树形结构
+     * @param menus 菜单DTO列表
+     * @return 根节点菜单列表
+     */
     private List<NavigationDTO> buildTree(List<NavigationDTO> menus) {
         Map<Long, NavigationDTO> menuMap = new HashMap<>();
         List<NavigationDTO> rootMenus = new ArrayList<>();
         
-        // 将所有菜单放入 map 中
+        // 1. 将所有菜单放入Map中，便于快速查找
         for (NavigationDTO menu : menus) {
             menuMap.put(menu.getPk(), menu);
         }
         
-        // 构建父子关系
+        // 2. 构建父子关系
         for (NavigationDTO menu : menus) {
             if (menu.getParentId() == null || menu.getParentId() == 0) {
-                // 根节点
+                // 根节点菜单
                 rootMenus.add(menu);
             } else {
-                // 找到父节点
+                // 找到父节点并添加子菜单
                 NavigationDTO parent = menuMap.get(menu.getParentId());
                 if (parent != null) {
                     if (parent.getChildren() == null) {
@@ -112,7 +134,7 @@ public class NavigationController {
             }
         }
         
-        // 按排序字段排序
+        // 3. 按排序字段对菜单进行排序
         rootMenus.sort(Comparator.comparing(NavigationDTO::getSortOrder, Comparator.nullsLast(Integer::compareTo)));
         for (NavigationDTO root : rootMenus) {
             sortChildren(root);
@@ -121,6 +143,10 @@ public class NavigationController {
         return rootMenus;
     }
     
+    /**
+     * 4. 递归排序子菜单：对菜单及其所有子菜单按排序字段进行排序
+     * @param menu 菜单DTO对象
+     */
     private void sortChildren(NavigationDTO menu) {
         if (menu.getChildren() != null && !menu.getChildren().isEmpty()) {
             menu.getChildren().sort(Comparator.comparing(NavigationDTO::getSortOrder, Comparator.nullsLast(Integer::compareTo)));
@@ -129,5 +155,4 @@ public class NavigationController {
             }
         }
     }
-
 }

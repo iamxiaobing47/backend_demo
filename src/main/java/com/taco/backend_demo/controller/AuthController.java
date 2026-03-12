@@ -35,6 +35,11 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.taco.backend_demo.common.message.ErrorMessageCodes.E006;
 
+/**
+ * 1. 认证控制器：处理用户登录、登出和令牌刷新等认证相关操作
+ * 2. JWT令牌管理：生成访问令牌和刷新令牌，实现双令牌认证机制
+ * 3. 安全性保障：密码重试次数重置、安全Cookie设置、令牌存储管理
+ */
 @Tag(name = "认证管理", description = "用户登录注册相关接口")
 @RestController
 @RequestMapping("/api/auth")
@@ -60,28 +65,35 @@ public class AuthController {
     @Autowired
     private TokenMapper tokenMapper;
 
+    /**
+     * 1. 用户登录接口：验证用户凭据并生成JWT令牌
+     * @param request 登录请求对象，包含邮箱和密码
+     * @param httpRequest HTTP请求对象
+     * @param httpResponse HTTP响应对象
+     * @return 包含访问令牌和用户信息的登录响应
+     */
     @Operation(summary = "用户登录", description = "使用邮箱和密码登录")
     @PostMapping("/login")
     public ResponseEntity<Response<LoginResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
 
-        // 1. 验证用户登录信息
+        // 1. 执行用户认证：验证邮箱和密码的有效性
         Authentication authentication = customAuthenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        // 2. 登录成功，更新用户登录信息
+        // 2. 重置密码重试次数：登录成功后重置失败计数
         LoginUserInfo loginUserInfo = (LoginUserInfo) authentication.getPrincipal();
         PasswordEntity passwordEntity = loginUserInfo.getPasswordEntity();
         passwordEntity.setRetryCount(0);
         passwordMapper.updateById(passwordEntity);
 
-        // 3. 生成JWT Token
+        // 3. 生成JWT令牌：创建访问令牌和刷新令牌
         UserInfo userInfo = new UserInfo(loginUserInfo);
         String accessToken = jwtUtils.generateAccessToken(userInfo);
         String refreshToken = jwtUtils.generateRefreshToken(userInfo);
 
-        // 4. 保存refreshToken到数据库
+        // 4. 存储刷新令牌：将刷新令牌保存到数据库以备后续验证
         saveRefreshToken(loginUserInfo.getUsername(), refreshToken);
 
-        // 5. 设置refreshToken cookie
+        // 5. 设置刷新令牌Cookie：通过HttpOnly Cookie安全传输刷新令牌
         Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false); // 开发环境设为false，生产环境应为true
@@ -89,30 +101,36 @@ public class AuthController {
         refreshTokenCookie.setMaxAge((int) (jwtUtils.getRefreshExpirationTime() / 1000)); // 转换为秒
         httpResponse.addCookie(refreshTokenCookie);
 
-        // 6. 返回accessToken和userInfo
+        // 6. 构建登录响应：返回访问令牌和用户基本信息
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setAccessToken(accessToken);
         loginResponse.setUserInfo(userInfo);
         return ResponseFactory.success(loginResponse);
     }
 
+    /**
+     * 2. 刷新令牌接口：使用有效的刷新令牌获取新的访问令牌
+     * @param request 刷新令牌请求对象
+     * @param httpResponse HTTP响应对象
+     * @return 包含新访问令牌的登录响应
+     */
     @Operation(summary = "刷新Token", description = "使用refresh token获取新的access token")
     @PostMapping("/refresh")
     public ResponseEntity<Response<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request, HttpServletResponse httpResponse) {
-        // 1. 验证refreshToken
+        // 1. 验证刷新令牌：检查令牌的有效性和签名
         String refreshToken = request.getRefreshToken();
         if (!jwtUtils.validateToken(refreshToken)) {
             return ResponseFactory.fail(E006);
         }
 
-        // 2. 从refreshToken中提取email
+        // 2. 提取用户信息：从刷新令牌中获取用户邮箱
         String email = jwtUtils.extractEmail(refreshToken);
         UserInfo userInfo = (UserInfo)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        // 3. 生成新的accessToken
+        // 3. 生成新令牌：创建新的刷新令牌（滚动刷新机制）
         String newRefreshToken = jwtUtils.generateRefreshToken(userInfo);
 
-        // 更新refreshToken cookie
+        // 4. 更新刷新令牌Cookie：替换旧的刷新令牌
         Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false); // 开发环境设为false，生产环境应为true
@@ -122,6 +140,11 @@ public class AuthController {
         return ResponseFactory.success(new LoginResponse());
     }
 
+    /**
+     * 3. 保存刷新令牌：将刷新令牌存储到数据库中
+     * @param email 用户邮箱
+     * @param refreshToken 刷新令牌字符串
+     */
     private void saveRefreshToken(String email, String refreshToken) {
         TokenEntity tokenEntity = new TokenEntity();
         tokenEntity.setEmail(email);
@@ -130,10 +153,16 @@ public class AuthController {
         tokenMapper.insert(tokenEntity);
     }
 
+    /**
+     * 4. 用户登出接口：清除认证信息并删除刷新令牌
+     * @param request HTTP请求对象
+     * @param response HTTP响应对象
+     * @return 成功登出的响应
+     */
     @Operation(summary = "用户登出", description = "清除认证信息并删除refresh token")
     @PostMapping("/logout")
     public ResponseEntity<Response<Void>> logout(HttpServletRequest request, HttpServletResponse response) {
-        // 清除refreshToken cookie
+        // 1. 清除刷新令牌Cookie：使客户端的刷新令牌失效
         Cookie refreshTokenCookie = new Cookie("refreshToken", null);
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setSecure(false);
@@ -141,7 +170,7 @@ public class AuthController {
         refreshTokenCookie.setMaxAge(0); // 立即过期
         response.addCookie(refreshTokenCookie);
 
-        // 从数据库删除refresh token
+        // 2. 删除数据库中的刷新令牌：确保服务器端令牌也失效
         UserInfo userInfo = (UserInfo)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         tokenMapper.delete(new LambdaQueryWrapper<TokenEntity>().eq(TokenEntity::getEmail, userInfo.getEmail()));
         return ResponseFactory.success(null, NotificationMessageCodes.N021);
