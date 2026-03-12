@@ -7,7 +7,6 @@ import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
 import com.taco.backend_demo.dto.auth.LoginRequest;
 import com.taco.backend_demo.dto.auth.LoginResponse;
-import com.taco.backend_demo.dto.auth.RefreshTokenRequest;
 import com.taco.backend_demo.dto.user.UserInfo;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.TokenEntity;
@@ -110,34 +109,42 @@ public class AuthController {
 
     /**
      * 2. 刷新令牌接口：使用有效的刷新令牌获取新的访问令牌
-     * @param request 刷新令牌请求对象
-     * @param httpResponse HTTP响应对象
-     * @return 包含新访问令牌的登录响应
+     * @param httpRequest HTTP 请求对象
+     * @param httpResponse HTTP 响应对象
+     * @return 包含新访问令牌和用户信息的登录响应
      */
-    @Operation(summary = "刷新Token", description = "使用refresh token获取新的access token")
+    @Operation(summary = "刷新 Token", description = "使用 refresh token 获取新的 access token")
     @PostMapping("/refresh")
-    public ResponseEntity<Response<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request, HttpServletResponse httpResponse) {
-        // 1. 验证刷新令牌：检查令牌的有效性和签名
-        String refreshToken = request.getRefreshToken();
-        if (!jwtUtils.validateToken(refreshToken)) {
+    public ResponseEntity<Response<LoginResponse>> refreshToken(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
+        // 1. 从 Cookie 获取刷新令牌
+        Cookie[] cookies = httpRequest.getCookies();
+        String refreshToken = null;
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // 2. 验证刷新令牌：检查令牌的有效性和签名
+        if (refreshToken == null || !jwtUtils.validateToken(refreshToken)) {
             return ResponseFactory.fail(E006);
         }
 
-        // 2. 提取用户信息：从刷新令牌中获取用户邮箱
+        // 3. 提取用户信息：从刷新令牌中获取用户邮箱
         String email = jwtUtils.extractEmail(refreshToken);
         UserInfo userInfo = (UserInfo)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        // 3. 生成新令牌：创建新的刷新令牌（滚动刷新机制）
-        String newRefreshToken = jwtUtils.generateRefreshToken(userInfo);
+        // 4. 生成新的访问令牌
+        String newAccessToken = jwtUtils.generateAccessToken(userInfo);
 
-        // 4. 更新刷新令牌Cookie：替换旧的刷新令牌
-        Cookie refreshTokenCookie = new Cookie("refreshToken", newRefreshToken);
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setSecure(false); // 开发环境设为false，生产环境应为true
-        refreshTokenCookie.setPath("/api/auth/refresh");
-        refreshTokenCookie.setMaxAge((int) (jwtUtils.getRefreshExpirationTime() / 1000)); // 转换为秒
-        httpResponse.addCookie(refreshTokenCookie);
-        return ResponseFactory.success(new LoginResponse());
+        // 5. 返回包含新访问令牌和用户信息的响应
+        LoginResponse response = new LoginResponse();
+        response.setAccessToken(newAccessToken);
+        response.setUserInfo(userInfo);
+        return ResponseFactory.success(response);
     }
 
     /**
