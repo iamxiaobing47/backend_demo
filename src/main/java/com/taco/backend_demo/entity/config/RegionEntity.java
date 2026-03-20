@@ -10,31 +10,25 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * 国家实体类
- * 对应数据库表：c_kuni
+ * 地域实体类
+ * 对应数据库表：c_region
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("c_kuni")
-public class KuniEntity {
+@TableName("c_region")
+public class RegionEntity {
 
     /**
-     * 国代码 (主键，自增)
+     * 地域代码 (主键，自增)
      */
-    @TableId(value = "kuni_cd", type = IdType.AUTO)
-    private Integer kuniCd;
+    @TableId(value = "region_cd", type = IdType.AUTO)
+    private Integer regionCd;
 
     /**
-     * 所属地域代码
+     * 地域名
      */
-    @TableField("chiiki_cd")
-    private Integer chiikiCd;
-
-    /**
-     * 国名
-     */
-    @TableField("kuni_nm")
-    private String kuniNm;
+    @TableField("region_nm")
+    private String regionNm;
 
     /**
      * 创建时间

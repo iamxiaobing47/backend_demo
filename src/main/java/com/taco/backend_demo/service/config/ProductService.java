@@ -1,34 +1,34 @@
 package com.taco.backend_demo.service.config;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.taco.backend_demo.entity.config.HinmokuEntity;
+import com.taco.backend_demo.entity.config.ProductEntity;
 
 import java.util.List;
 
 /**
  * 品目服务接口
  */
-public interface HinmokuService extends IService<HinmokuEntity> {
+public interface ProductService extends IService<ProductEntity> {
 
     /**
-     * 查询所有品目列表
+     * 获取所有品目
      */
-    List<HinmokuEntity> listAll();
+    List<ProductEntity> listAll();
 
     /**
-     * 根据 ID 查询品目
+     * 根据 ID 获取品目
      */
-    HinmokuEntity getById(Integer id);
+    ProductEntity getById(Integer id);
 
     /**
      * 创建品目
      */
-    void create(HinmokuEntity entity);
+    void create(ProductEntity entity);
 
     /**
      * 更新品目
      */
-    void update(HinmokuEntity entity);
+    void update(ProductEntity entity);
 
     /**
      * 删除品目

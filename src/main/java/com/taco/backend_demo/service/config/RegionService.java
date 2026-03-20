@@ -1,34 +1,34 @@
 package com.taco.backend_demo.service.config;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.taco.backend_demo.entity.config.ChiikiEntity;
+import com.taco.backend_demo.entity.config.RegionEntity;
 
 import java.util.List;
 
 /**
  * 地域服务接口
  */
-public interface ChiikiService extends IService<ChiikiEntity> {
+public interface RegionService extends IService<RegionEntity> {
 
     /**
-     * 查询所有地域列表
+     * 获取所有地域
      */
-    List<ChiikiEntity> listAll();
+    List<RegionEntity> listAll();
 
     /**
-     * 根据 ID 查询地域
+     * 根据 ID 获取地域
      */
-    ChiikiEntity getById(Integer id);
+    RegionEntity getById(Integer id);
 
     /**
      * 创建地域
      */
-    void create(ChiikiEntity entity);
+    void create(RegionEntity entity);
 
     /**
      * 更新地域
      */
-    void update(ChiikiEntity entity);
+    void update(RegionEntity entity);
 
     /**
      * 删除地域

@@ -10,25 +10,25 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * 地域实体类
- * 对应数据库表：c_yushutsusaki_chiiki
+ * 品目实体类
+ * 对应数据库表：c_product
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("c_yushutsusaki_chiiki")
-public class ChiikiEntity {
+@TableName("c_product")
+public class ProductEntity {
 
     /**
-     * 地域代码 (主键，自增)
+     * 品目代码 (主键，自增)
      */
-    @TableId(value = "chiiki_cd", type = IdType.AUTO)
-    private Integer chiikiCd;
+    @TableId(value = "product_cd", type = IdType.AUTO)
+    private Integer productCd;
 
     /**
-     * 地域名
+     * 品目名
      */
-    @TableField("chiiki_nm")
-    private String chiikiNm;
+    @TableField("product_nm")
+    private String productNm;
 
     /**
      * 创建时间

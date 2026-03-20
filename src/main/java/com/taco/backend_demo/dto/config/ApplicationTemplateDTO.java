@@ -13,18 +13,21 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class YoushikiDTO {
+public class ApplicationTemplateDTO {
 
-    private Integer youshikiId;
+    private Integer templateId;
+
+    @NotNull(message = "地域コードは必須です")
+    private Integer regionCd;
 
     @NotNull(message = "国コードは必須です")
-    private Integer kuniCd;
+    private Integer countryCd;
 
     @NotNull(message = "品目コードは必須です")
-    private Integer hinmokuCd;
+    private Integer productCd;
 
-    @NotBlank(message = "様式名は必須です")
-    private String youshikiNm;
+    @NotBlank(message = "テンプレート名は必須です")
+    private String templateNm;
 
     @NotBlank(message = "ファイルパスは必須です")
     private String filePath;

@@ -2,9 +2,9 @@ package com.taco.backend_demo.controller.config;
 
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
-import com.taco.backend_demo.dto.config.ChiikiDTO;
-import com.taco.backend_demo.entity.config.ChiikiEntity;
-import com.taco.backend_demo.service.config.ChiikiService;
+import com.taco.backend_demo.dto.config.RegionDTO;
+import com.taco.backend_demo.entity.config.RegionEntity;
+import com.taco.backend_demo.service.config.RegionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -20,32 +20,32 @@ import java.util.List;
  */
 @Tag(name = "地域管理", description = "地域情報の CRUD 操作")
 @RestController
-@RequestMapping("/api/config/chiiki")
-public class ChiikiController {
+@RequestMapping("/api/config/region")
+public class RegionController {
 
     @Autowired
-    private ChiikiService chiikiService;
+    private RegionService regionService;
 
     @Operation(summary = "地域一覧取得", description = "すべての地域を取得します")
     @GetMapping
-    public ResponseEntity<Response<List<ChiikiEntity>>> list() {
-        List<ChiikiEntity> list = chiikiService.listAll();
+    public ResponseEntity<Response<List<RegionEntity>>> list() {
+        List<RegionEntity> list = regionService.listAll();
         return ResponseFactory.success(list);
     }
 
     @Operation(summary = "地域詳細取得", description = "ID を指定して地域の詳細を取得します")
     @GetMapping("/{id}")
-    public ResponseEntity<Response<ChiikiEntity>> get(@PathVariable Integer id) {
-        ChiikiEntity entity = chiikiService.getById(id);
+    public ResponseEntity<Response<RegionEntity>> get(@PathVariable Integer id) {
+        RegionEntity entity = regionService.getById(id);
         return ResponseFactory.success(entity);
     }
 
     @Operation(summary = "地域作成", description = "新しい地域を作成します")
     @PostMapping
-    public ResponseEntity<Response<Void>> create(@Valid @RequestBody ChiikiDTO dto) {
-        ChiikiEntity entity = new ChiikiEntity();
+    public ResponseEntity<Response<Void>> create(@Valid @RequestBody RegionDTO dto) {
+        RegionEntity entity = new RegionEntity();
         BeanUtils.copyProperties(dto, entity);
-        chiikiService.create(entity);
+        regionService.create(entity);
         return ResponseFactory.success(null);
     }
 
@@ -53,18 +53,18 @@ public class ChiikiController {
     @PutMapping("/{id}")
     public ResponseEntity<Response<Void>> update(
             @PathVariable Integer id,
-            @Valid @RequestBody ChiikiDTO dto) {
-        ChiikiEntity entity = chiikiService.getById(id);
+            @Valid @RequestBody RegionDTO dto) {
+        RegionEntity entity = regionService.getById(id);
         BeanUtils.copyProperties(dto, entity);
-        entity.setChiikiCd(id);
-        chiikiService.update(entity);
+        entity.setRegionCd(id);
+        regionService.update(entity);
         return ResponseFactory.success(null);
     }
 
     @Operation(summary = "地域削除", description = "地域を削除します")
     @DeleteMapping("/{id}")
     public ResponseEntity<Response<Void>> delete(@PathVariable Integer id) {
-        chiikiService.delete(id);
+        regionService.delete(id);
         return ResponseFactory.success(null);
     }
 }

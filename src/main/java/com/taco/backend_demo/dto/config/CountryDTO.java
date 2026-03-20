@@ -13,13 +13,13 @@ import jakarta.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class KuniDTO {
+public class CountryDTO {
 
-    private Integer kuniCd;
+    private Integer countryCd;
 
     @NotNull(message = "地域コードは必須です")
-    private Integer chiikiCd;
+    private Integer regionCd;
 
     @NotBlank(message = "国名は必須です")
-    private String kuniNm;
+    private String countryNm;
 }

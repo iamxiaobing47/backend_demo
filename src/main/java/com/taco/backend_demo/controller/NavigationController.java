@@ -92,8 +92,7 @@ public class NavigationController {
     private NavigationDTO convertToDTO(NavigationEntity entity) {
         NavigationDTO dto = new NavigationDTO();
         dto.setPk(entity.getPk());
-        dto.setChineseName(entity.getChineseName());
-        dto.setEnglishName(entity.getEnglishName());
+        dto.setName(entity.getName());
         dto.setPath(entity.getPath());
         dto.setIcon(entity.getIcon());
         dto.setSortOrder(entity.getSortOrder());

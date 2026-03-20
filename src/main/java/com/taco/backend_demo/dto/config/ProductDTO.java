@@ -5,18 +5,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 /**
- * 地域 DTO
+ * 品目 DTO
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChiikiDTO {
+public class ProductDTO {
 
-    private Integer chiikiCd;
+    private Integer productCd;
 
-    @NotBlank(message = "地域名は必須です")
-    private String chiikiNm;
+    @NotBlank(message = "品目名は必須です")
+    private String productNm;
 }

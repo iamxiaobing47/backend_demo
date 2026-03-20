@@ -1,9 +1,10 @@
 package com.taco.backend_demo.service.config.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.taco.backend_demo.entity.config.HinmokuEntity;
-import com.taco.backend_demo.mapper.config.HinmokuMapper;
-import com.taco.backend_demo.service.config.HinmokuService;
+import com.taco.backend_demo.entity.config.RegionEntity;
+import com.taco.backend_demo.mapper.config.RegionMapper;
+import com.taco.backend_demo.service.config.RegionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,24 +12,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 品目服务实现类
+ * 地域服务实现类
  */
 @Service
-public class HinmokuServiceImpl extends ServiceImpl<HinmokuMapper, HinmokuEntity> implements HinmokuService {
+public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> implements RegionService {
 
     @Override
-    public List<HinmokuEntity> listAll() {
+    public List<RegionEntity> listAll() {
         return list();
     }
 
     @Override
-    public HinmokuEntity getById(Integer id) {
+    public RegionEntity getById(Integer id) {
         return getById(id);
     }
 
     @Override
     @Transactional
-    public void create(HinmokuEntity entity) {
+    public void create(RegionEntity entity) {
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
         save(entity);
@@ -36,7 +37,7 @@ public class HinmokuServiceImpl extends ServiceImpl<HinmokuMapper, HinmokuEntity
 
     @Override
     @Transactional
-    public void update(HinmokuEntity entity) {
+    public void update(RegionEntity entity) {
         entity.setUpdatedAt(LocalDateTime.now());
         updateById(entity);
     }

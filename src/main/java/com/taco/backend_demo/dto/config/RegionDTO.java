@@ -7,17 +7,15 @@ import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * 品目 DTO
+ * 地域 DTO
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class HinmokuDTO {
+public class RegionDTO {
 
-    private Integer hinmokuCd;
+    private Integer regionCd;
 
-    @NotBlank(message = "品目名は必須です")
-    private String hinmokuNm;
-
-    private String hinmokuEn;
+    @NotBlank(message = "地域名は必須です")
+    private String regionNm;
 }

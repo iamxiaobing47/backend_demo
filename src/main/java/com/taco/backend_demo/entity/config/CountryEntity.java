@@ -10,43 +10,31 @@ import lombok.EqualsAndHashCode;
 import java.time.LocalDateTime;
 
 /**
- * 申请书模板实体类
- * 对应数据库表：p_ikkatsu_youshiki
+ * 国家实体类
+ * 对应数据库表：c_country
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("p_ikkatsu_youshiki")
-public class YoushikiEntity {
+@TableName("c_country")
+public class CountryEntity {
 
     /**
-     * 样式 ID(主键，自增)
+     * 国代码 (主键，自增)
      */
-    @TableId(value = "youshiki_id", type = IdType.AUTO)
-    private Integer youshikiId;
+    @TableId(value = "country_cd", type = IdType.AUTO)
+    private Integer countryCd;
 
     /**
-     * 国代码
+     * 所属地域代码
      */
-    @TableField("kuni_cd")
-    private Integer kuniCd;
+    @TableField("region_cd")
+    private Integer regionCd;
 
     /**
-     * 品目代码
+     * 国名
      */
-    @TableField("hinmoku_cd")
-    private Integer hinmokuCd;
-
-    /**
-     * 样式名称
-     */
-    @TableField("youshiki_nm")
-    private String youshikiNm;
-
-    /**
-     * 文件路径
-     */
-    @TableField("file_path")
-    private String filePath;
+    @TableField("country_nm")
+    private String countryNm;
 
     /**
      * 创建时间

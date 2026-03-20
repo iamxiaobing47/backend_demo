@@ -8,8 +8,7 @@ import java.util.List;
 @Data
 public class NavigationDTO {
     private Long pk;
-    private String chineseName;
-    private String englishName;
+    private String name;
     private String path;
     private String icon;
     private Integer sortOrder;
