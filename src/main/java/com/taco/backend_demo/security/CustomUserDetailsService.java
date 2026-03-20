@@ -23,69 +23,119 @@ import static com.taco.backend_demo.common.message.ErrorMessageCodes.E002;
 
 /**
  * 自定义用户详情服务：实现 Spring Security 的 UserDetailsService 接口
- * <p>
- * 核心职责：
+ *
+ * 【UserDetailsService 的作用】
+ * Spring Security 使用 UserDetailsService 从数据库加载用户信息
+ * 它是认证流程的第一步，负责查询用户并检查账户状态
+ *
+ * 【核心职责】
  * 1. 根据用户名（邮箱）加载用户认证信息
- * 2. 验证账户状态（是否锁定、启用等）
+ * 2. 验证账户状态（是否锁定、是否启用等）
  * 3. 返回包含权限信息的 UserDetails 对象
+ *
+ * 【工作流程】
+ * 1. 接收用户名（邮箱） → 2. 查询数据库 → 3. 检查账户状态 → 4. 返回 UserDetails
+ *
+ * 【重要说明】
+ * - 用户名是邮箱地址，不是传统的 username
+ * - 密码验证由 CustomAuthenticationProvider 完成
+ *
+ * @author taco
  */
 @Slf4j
-@Service
+@Service  // Spring 服务组件，会被自动扫描
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
+    // ==================== 依赖注入 ====================
+
+    /**
+     * 密码 Mapper：操作用户密码表（password）
+     * 用于查询用户密码和账户状态信息
+     */
     private final PasswordMapper passwordMapper;
+
+    /**
+     * 用户信息视图 Mapper：查询用户完整信息（v_user_info）
+     * 用于获取用户的个人信息和权限
+     */
     private final VUserInfoMapper vUserInfoMapper;
 
     /**
-     * 根据用户名加载用户详情
+     * 【核心方法】根据用户名加载用户详情
+     * <p>
+     * Spring Security 会在用户认证时调用此方法
+     * <p>
+     * 完整流程：
+     * 1. 查询密码实体：验证用户邮箱是否存在
+     * 2. 检查账户锁定状态：防止被锁定的用户登录
+     * 3. 检查账户启用状态：只有 ACTIVE 状态才能登录
+     * 4. 查询用户信息实体：获取完整个人信息
+     * 5. 构建并返回 LoginUserInfo 对象
      *
      * @param username 用户名（邮箱地址）
-     * @return 包含用户认证和授权信息的 UserDetails 对象
+     *                 例如：user@example.com
+     * @return UserDetails 对象，包含用户认证和授权信息
+     *         - 用户邮箱（作为用户名）
+     *         - 加密后的密码
+     *         - 权限列表
      * @throws UsernameNotFoundException 用户不存在时抛出异常
+     *                                   Spring Security 会捕获并返回 401
      * @throws BusinessException         账户被锁定时抛出异常
+     *                                   返回对应的错误码和消息
      */
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true)  // 只读事务，提高查询性能
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("Loading user by username: {}", username);
 
-        // 1. 查询密码实体：验证用户邮箱是否存在并获取密码信息
+        // 【步骤 1】查询密码实体
+        // 验证用户邮箱是否存在并获取密码信息
+        // LambdaQueryWrapper：类型安全的查询条件构建器
+        // eq() 方法：生成 WHERE email = ? 条件
         PasswordEntity passwordEntity = passwordMapper.selectOne(
             new LambdaQueryWrapper<PasswordEntity>()
                 .eq(PasswordEntity::getEmail, username)
         );
 
+        // 用户不存在，返回通用错误（不暴露"用户不存在"的信息）
         if (passwordEntity == null) {
             log.warn("User not found with email: {}", username);
-            throw new BusinessException(E001);
+            throw new BusinessException(E001);  // 用户不存在
         }
 
-        // 2. 检查账户锁定状态
+        // 【步骤 2】检查账户锁定状态
+        // Boolean.TRUE.equals() 是安全的空值检查方式
+        // 如果 isLocked 为 null 或 false，条件不成立
         if (Boolean.TRUE.equals(passwordEntity.getIsLocked())) {
             log.warn("User account is locked: {}", username);
-            throw new BusinessException(E002);
+            throw new BusinessException(E002);  // 账户被锁定
         }
 
-        // 3. 检查账户启用状态
+        // 【步骤 3】检查账户启用状态
+        // 只有 loginStatus 为 "ACTIVE" 才能登录
         if (!"ACTIVE".equals(passwordEntity.getLoginStatus())) {
             log.warn("User account is not active: {}", username);
-            throw new BusinessException(E001);
+            throw new BusinessException(E001);  // 用户不存在（统一错误）
         }
 
-        // 4. 查询用户信息实体：获取用户的完整个人信息
+        // 【步骤 4】查询用户信息实体
+        // 获取用户的完整个人信息（姓名、用户类型等）
         UserInfoEntity userInfo = vUserInfoMapper.selectOne(
             new LambdaQueryWrapper<UserInfoEntity>()
                 .eq(UserInfoEntity::getEmail, username)
         );
 
+        // 用户信息不存在，抛出异常
         if (userInfo == null) {
             log.warn("User info not found for email: {}", username);
             throw new BusinessException(E001);
         }
 
-        // 5. 构建用户详情对象
+        // 【步骤 5】构建用户详情对象
+        // LoginUserInfo 是自定义的 UserDetails 实现类
+        // 包含用户信息、密码实体和权限列表
         return new LoginUserInfo(userInfo, passwordEntity,
-            Collections.singletonList(LoginConstants.ROLE_USER));
+            Collections.singletonList(LoginConstants.ROLE_USER));  // 默认角色：ROLE_USER
     }
 }
