@@ -7,10 +7,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -19,65 +21,65 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * 1. JWT认证过滤器：拦截所有请求并验证JWT令牌的有效性
- * 2. 安全上下文管理：为有效令牌设置Spring Security认证上下文
- * 3. 免认证路径：/api/test路径下的请求跳过JWT验证
+ * JWT 认证过滤器：拦截所有请求并验证 JWT 令牌的有效性
+ * <p>
+ * 核心职责：
+ * 1. 从请求头中提取 JWT 令牌
+ * 2. 验证令牌有效性
+ * 3. 为有效令牌设置 Spring Security 认证上下文
+ * <p>
+ * 免认证路径：/api/test 路径下的请求跳过 JWT 验证
  */
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
+    private final CustomUserDetailsService userDetailsService;
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
-
-    /**
-     * 1. 内部过滤逻辑：处理每个HTTP请求的JWT认证流程
-     * @param request HTTP请求对象
-     * @param response HTTP响应对象  
-     * @param filterChain 过滤器链
-     * @throws ServletException Servlet异常
-     * @throws IOException IO异常
-     */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        // 1. 免认证路径检查：/api/test路径下的请求直接放行
-        if (request.getRequestURI().startsWith("/api/test")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
 
         try {
-            // 2. 解析并验证JWT令牌：从请求头中提取并验证令牌
+            // 1. 解析 JWT 令牌
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtils.validateToken(jwt)) {
-                // 3. 提取用户信息：从JWT中获取用户邮箱
-                String email = jwtUtils.extractEmail(jwt);
 
-                // 4. 加载用户详情：通过用户邮箱获取完整的用户认证信息
-                LoginUserInfo loginUserInfo = userDetailsService.loadUserByUsername(email);
-                
-                // 5. 创建认证令牌：构建Spring Security认证对象
+            if (StringUtils.hasText(jwt) && jwtUtils.validateToken(jwt)) {
+                // 2. 提取用户邮箱并加载用户详情
+                String email = jwtUtils.extractEmail(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                // 3. 构建认证上下文
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    new UserInfo(loginUserInfo), null, loginUserInfo.getAuthorities());
+                        new UserInfo((LoginUserInfo) userDetails),
+                        null,
+                        userDetails.getAuthorities()
+                );
+
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // 6. 设置安全上下文：将认证信息存储到SecurityContext中
+                // 4. 设置安全上下文
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
+                log.debug("Set authentication for user: {}", email);
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
     /**
-     * 2. 解析JWT令牌：从HTTP请求头中提取Bearer令牌
-     * @param request HTTP请求对象
-     * @return JWT令牌字符串，如果未找到则返回null
+     * 从 HTTP 请求头中解析 JWT 令牌
+     *
+     * @param request HTTP 请求对象
+     * @return JWT 令牌字符串，如果未找到则返回 null
      */
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
