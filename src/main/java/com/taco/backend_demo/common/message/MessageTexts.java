@@ -20,6 +20,14 @@ public final class MessageTexts {
     static {
         Map<String, String> messages = new HashMap<>();
 
+        // ==================== 成功消息 (N001-N019) ====================
+        messages.put("N001", "Created successfully");
+        messages.put("N002", "Updated successfully");
+        messages.put("N003", "Deleted successfully");
+
+        // ==================== 认证相关 (N020-N029) ====================
+        messages.put("N021", "Logged out successfully");
+
         // ==================== 认证与授权错误 (E001-E009) ====================
         messages.put("E001", "Username or password incorrect");
         messages.put("E002", "User account locked");

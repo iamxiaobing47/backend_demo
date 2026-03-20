@@ -10,6 +10,11 @@ public final class NotificationMessageCodes {
     // 防止实例化
     private NotificationMessageCodes() {}
 
+    // ==================== 成功操作 ====================
+    public static final String N001 = "N001"; // 创建成功
+    public static final String N002 = "N002"; // 更新成功
+    public static final String N003 = "N003"; // 删除成功
+
     // ==================== 认证相关 ====================
     public static final String N021 = "N021"; // 登出成功
 }

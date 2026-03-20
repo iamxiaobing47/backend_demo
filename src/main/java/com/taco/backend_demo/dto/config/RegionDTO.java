@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.NotBlank;
-
 /**
  * 地域 DTO
  */
@@ -15,7 +13,5 @@ import jakarta.validation.constraints.NotBlank;
 public class RegionDTO {
 
     private Integer regionCd;
-
-    @NotBlank(message = "地域名は必須です")
     private String regionNm;
 }
