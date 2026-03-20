@@ -31,13 +31,6 @@ public class CountryController {
         return ResponseFactory.success(list);
     }
 
-    @Operation(summary = "国家詳細取得", description = "ID を指定して国家の詳細を取得します")
-    @GetMapping("/{id}")
-    public ResponseEntity<Response<CountryEntity>> get(@PathVariable Integer id) {
-        CountryEntity entity = countryService.getById(id);
-        return ResponseFactory.success(entity);
-    }
-
     @Operation(summary = "地域別国家取得", description = "地域コードを指定して国家の一覧を取得します")
     @GetMapping("/region/{regionCd}")
     public ResponseEntity<Response<List<CountryEntity>>> listByRegion(@PathVariable Integer regionCd) {

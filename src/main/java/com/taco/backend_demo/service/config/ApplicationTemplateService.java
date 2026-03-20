@@ -6,52 +6,27 @@ import com.taco.backend_demo.entity.config.ApplicationTemplateEntity;
 import java.util.List;
 
 /**
- * 申请书模板服务接口
+ * 申請書テンプレートサービスインターフェース
  */
 public interface ApplicationTemplateService extends IService<ApplicationTemplateEntity> {
 
     /**
-     * 获取所有模板
-     */
-    List<ApplicationTemplateEntity> listAll();
-
-    /**
-     * 根据地域获取模板列表
-     */
-    List<ApplicationTemplateEntity> listByRegion(Integer regionCd);
-
-    /**
-     * 根据国家获取模板列表
-     */
-    List<ApplicationTemplateEntity> listByCountry(Integer countryCd);
-
-    /**
-     * 根据品目获取模板列表
-     */
-    List<ApplicationTemplateEntity> listByProduct(Integer productCd);
-
-    /**
-     * 根据条件获取模板列表
+     * 条件を指定してテンプレートの一覧を取得します
      */
     List<ApplicationTemplateEntity> listByCondition(Integer regionCd, Integer countryCd, Integer productCd);
 
     /**
-     * 根据 ID 获取模板
-     */
-    ApplicationTemplateEntity getById(Integer id);
-
-    /**
-     * 创建模板
+     * テンプレートを作成します
      */
     void create(ApplicationTemplateEntity entity);
 
     /**
-     * 更新模板
+     * テンプレートを更新します
      */
     void update(ApplicationTemplateEntity entity);
 
     /**
-     * 删除模板
+     * テンプレートを削除します
      */
     void delete(Integer id);
 }

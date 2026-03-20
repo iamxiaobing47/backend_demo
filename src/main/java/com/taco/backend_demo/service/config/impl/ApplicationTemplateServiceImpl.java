@@ -12,36 +12,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 申请书模板服务实现类
+ * 申請書テンプレートサービス実装クラス
  */
 @Service
 public class ApplicationTemplateServiceImpl extends ServiceImpl<ApplicationTemplateMapper, ApplicationTemplateEntity> implements ApplicationTemplateService {
-
-    @Override
-    public List<ApplicationTemplateEntity> listAll() {
-        return list();
-    }
-
-    @Override
-    public List<ApplicationTemplateEntity> listByRegion(Integer regionCd) {
-        LambdaQueryWrapper<ApplicationTemplateEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ApplicationTemplateEntity::getRegionCd, regionCd);
-        return list(wrapper);
-    }
-
-    @Override
-    public List<ApplicationTemplateEntity> listByCountry(Integer countryCd) {
-        LambdaQueryWrapper<ApplicationTemplateEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ApplicationTemplateEntity::getCountryCd, countryCd);
-        return list(wrapper);
-    }
-
-    @Override
-    public List<ApplicationTemplateEntity> listByProduct(Integer productCd) {
-        LambdaQueryWrapper<ApplicationTemplateEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ApplicationTemplateEntity::getProductCd, productCd);
-        return list(wrapper);
-    }
 
     @Override
     public List<ApplicationTemplateEntity> listByCondition(Integer regionCd, Integer countryCd, Integer productCd) {
@@ -56,11 +30,6 @@ public class ApplicationTemplateServiceImpl extends ServiceImpl<ApplicationTempl
             wrapper.eq(ApplicationTemplateEntity::getProductCd, productCd);
         }
         return list(wrapper);
-    }
-
-    @Override
-    public ApplicationTemplateEntity getById(Integer id) {
-        return super.getById(id);
     }
 
     @Override

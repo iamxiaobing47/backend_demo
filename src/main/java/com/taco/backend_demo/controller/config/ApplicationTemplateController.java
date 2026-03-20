@@ -34,13 +34,6 @@ public class ApplicationTemplateController {
         return ResponseFactory.success(list);
     }
 
-    @Operation(summary = "テンプレート詳細取得", description = "ID を指定してテンプレートの詳細を取得します")
-    @GetMapping("/{id}")
-    public ResponseEntity<Response<ApplicationTemplateEntity>> get(@PathVariable Integer id) {
-        ApplicationTemplateEntity entity = templateService.getById(id);
-        return ResponseFactory.success(entity);
-    }
-
     @Operation(summary = "テンプレート作成", description = "新しいテンプレートを作成します")
     @PostMapping
     public ResponseEntity<Response<Void>> create(@RequestBody ApplicationTemplateEntity entity) {

@@ -31,13 +31,6 @@ public class ProductController {
         return ResponseFactory.success(list);
     }
 
-    @Operation(summary = "品目詳細取得", description = "ID を指定して品目の詳細を取得します")
-    @GetMapping("/{id}")
-    public ResponseEntity<Response<ProductEntity>> get(@PathVariable Integer id) {
-        ProductEntity entity = productService.getById(id);
-        return ResponseFactory.success(entity);
-    }
-
     @Operation(summary = "品目作成", description = "新しい品目を作成します")
     @PostMapping
     public ResponseEntity<Response<Void>> create(@RequestBody ProductEntity entity) {

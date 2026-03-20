@@ -31,13 +31,6 @@ public class RegionController {
         return ResponseFactory.success(list);
     }
 
-    @Operation(summary = "地域詳細取得", description = "ID を指定して地域の詳細を取得します")
-    @GetMapping("/{id}")
-    public ResponseEntity<Response<RegionEntity>> get(@PathVariable Integer id) {
-        RegionEntity entity = regionService.getById(id);
-        return ResponseFactory.success(entity);
-    }
-
     @Operation(summary = "地域作成", description = "新しい地域を作成します")
     @PostMapping
     public ResponseEntity<Response<Void>> create(@RequestBody RegionEntity entity) {
