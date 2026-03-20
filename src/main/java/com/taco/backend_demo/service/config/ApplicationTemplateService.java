@@ -31,6 +31,11 @@ public interface ApplicationTemplateService extends IService<ApplicationTemplate
     List<ApplicationTemplateEntity> listByProduct(Integer productCd);
 
     /**
+     * 根据条件获取模板列表
+     */
+    List<ApplicationTemplateEntity> listByCondition(Integer regionCd, Integer countryCd, Integer productCd);
+
+    /**
      * 根据 ID 获取模板
      */
     ApplicationTemplateEntity getById(Integer id);

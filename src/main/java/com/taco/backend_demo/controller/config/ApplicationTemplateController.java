@@ -26,10 +26,18 @@ public class ApplicationTemplateController {
     @Autowired
     private ApplicationTemplateService templateService;
 
-    @Operation(summary = "テンプレート一覧取得", description = "すべてのテンプレートを取得します")
+    @Operation(summary = "テンプレート一覧取得", description = "条件を指定してテンプレートの一覧を取得します")
     @GetMapping
-    public ResponseEntity<Response<List<ApplicationTemplateEntity>>> list() {
-        List<ApplicationTemplateEntity> list = templateService.listAll();
+    public ResponseEntity<Response<List<ApplicationTemplateEntity>>> list(
+            @RequestParam(required = false) Integer regionCd,
+            @RequestParam(required = false) Integer countryCd,
+            @RequestParam(required = false) Integer productCd) {
+        List<ApplicationTemplateEntity> list;
+        if (regionCd != null || countryCd != null || productCd != null) {
+            list = templateService.listByCondition(regionCd, countryCd, productCd);
+        } else {
+            list = templateService.listAll();
+        }
         return ResponseFactory.success(list);
     }
 

@@ -44,6 +44,21 @@ public class ApplicationTemplateServiceImpl extends ServiceImpl<ApplicationTempl
     }
 
     @Override
+    public List<ApplicationTemplateEntity> listByCondition(Integer regionCd, Integer countryCd, Integer productCd) {
+        LambdaQueryWrapper<ApplicationTemplateEntity> wrapper = new LambdaQueryWrapper<>();
+        if (regionCd != null) {
+            wrapper.eq(ApplicationTemplateEntity::getRegionCd, regionCd);
+        }
+        if (countryCd != null) {
+            wrapper.eq(ApplicationTemplateEntity::getCountryCd, countryCd);
+        }
+        if (productCd != null) {
+            wrapper.eq(ApplicationTemplateEntity::getProductCd, productCd);
+        }
+        return list(wrapper);
+    }
+
+    @Override
     public ApplicationTemplateEntity getById(Integer id) {
         return getById(id);
     }
