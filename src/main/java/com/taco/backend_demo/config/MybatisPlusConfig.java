@@ -1,5 +1,9 @@
 package com.taco.backend_demo.config;
 
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
@@ -8,5 +12,19 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class MybatisPlusConfig {
-    // 空配置类，保留用于未来扩展
+    /**
+     * 注册 MyBatis-Plus 拦截器，并添加分页插件
+     */
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+
+        // 1. 创建主拦截器
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+        // 2. ‼️ 关键：添加分页内部拦截器 ‼️
+        //    并指定你的数据库类型（我的是 POSTGRE_SQL）
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));
+
+        return interceptor;
+    }
 }

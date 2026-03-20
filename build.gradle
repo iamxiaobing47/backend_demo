@@ -24,7 +24,14 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "com.baomidou:mybatis-plus-bom:3.5.15"
+    }
+}
+
 dependencies {
+    implementation("com.baomidou:mybatis-plus-jsqlparser-4.9")
     implementation("org.apache.commons:commons-lang3:3.20.0")
     implementation("com.google.guava:guava:33.5.0-jre")
     implementation("org.apache.commons:commons-collections4:4.5.0")
