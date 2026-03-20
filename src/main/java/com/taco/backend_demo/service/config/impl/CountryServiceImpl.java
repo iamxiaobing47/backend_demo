@@ -31,7 +31,7 @@ public class CountryServiceImpl extends ServiceImpl<CountryMapper, CountryEntity
 
     @Override
     public CountryEntity getById(Integer id) {
-        return getById(id);
+        return super.getById(id);
     }
 
     @Override

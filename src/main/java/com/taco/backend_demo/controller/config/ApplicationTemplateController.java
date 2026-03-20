@@ -84,6 +84,9 @@ public class ApplicationTemplateController {
             @PathVariable Integer id,
             @Valid @RequestBody ApplicationTemplateDTO dto) {
         ApplicationTemplateEntity entity = templateService.getById(id);
+        if (entity == null) {
+            return ResponseFactory.fail("テンプレートが見つかりません");
+        }
         BeanUtils.copyProperties(dto, entity);
         entity.setTemplateId(id);
         templateService.update(entity);

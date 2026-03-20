@@ -60,7 +60,7 @@ public class ApplicationTemplateServiceImpl extends ServiceImpl<ApplicationTempl
 
     @Override
     public ApplicationTemplateEntity getById(Integer id) {
-        return getById(id);
+        return super.getById(id);
     }
 
     @Override

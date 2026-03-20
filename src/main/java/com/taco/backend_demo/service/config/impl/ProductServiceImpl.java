@@ -24,7 +24,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, ProductEntity
 
     @Override
     public ProductEntity getById(Integer id) {
-        return getById(id);
+        return super.getById(id);
     }
 
     @Override

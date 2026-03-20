@@ -24,7 +24,7 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
 
     @Override
     public RegionEntity getById(Integer id) {
-        return getById(id);
+        return super.getById(id);
     }
 
     @Override
