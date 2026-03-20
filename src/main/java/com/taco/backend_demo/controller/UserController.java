@@ -104,24 +104,6 @@ public class UserController {
         return ResponseFactory.success(userInfoEntity);
     }
 
-    @Operation(summary = "批量查询用户信息", description = "根据用户ID列表批量查询用户信息")
-    @PostMapping("/batch")
-    public ResponseEntity<Response<List<UserInfo>>> batchGetUsers(@Valid @RequestBody BatchUserQueryRequest request) {
-        // 1. 参数验证：检查用户ID列表是否为空
-        List<String> userIds = request.getUserIds();
-        if (userIds == null || userIds.isEmpty()) {
-            return ResponseFactory.success(null);
-        }
-
-        // 2. 批量查询用户信息：通过IN查询获取多个用户的完整信息
-        QueryWrapper<UserInfoEntity> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("user_id", userIds);
-        List<UserInfoEntity> userInfoEntities = vUserInfoMapper.selectList(queryWrapper);
-        return ResponseFactory.success(userInfoEntities.stream()
-                .map(UserInfo::new)
-                .collect(Collectors.toList()));
-    }
-
     @Operation(summary = "更新用户信息", description = "更新当前用户信息")
     @PutMapping
     public ResponseEntity<Response<Void>> updateUser(@Valid @RequestBody UpdateUserRequest request) {
