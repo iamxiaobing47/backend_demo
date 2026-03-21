@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * 地域实体类
- * 对应数据库表：c_region
+ * 对应数据库表：region
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("c_region")
+@TableName("region")
 public class RegionEntity {
 
     /**

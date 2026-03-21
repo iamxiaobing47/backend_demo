@@ -32,6 +32,15 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
     public void create(RegionEntity entity) {
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
+        // 如果 regionCd 为空，手动生成一个值（最大 id + 1）
+        if (entity.getRegionCd() == null) {
+            LambdaQueryWrapper<RegionEntity> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.orderByDesc(RegionEntity::getRegionCd).last("LIMIT 1");
+            RegionEntity maxRegion = this.getOne(queryWrapper);
+            int newRegionCd = (maxRegion != null && maxRegion.getRegionCd() != null)
+                ? maxRegion.getRegionCd() + 1 : 1;
+            entity.setRegionCd(newRegionCd);
+        }
         save(entity);
     }
 

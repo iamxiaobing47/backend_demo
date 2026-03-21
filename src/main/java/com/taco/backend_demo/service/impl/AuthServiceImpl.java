@@ -120,7 +120,13 @@ public class AuthServiceImpl implements AuthService {
 
         // 【步骤 3】生成 JWT 令牌
         // 构建用户信息对象，用于生成令牌
-        UserInfo userInfo = new UserInfo(loginUserInfo);
+        UserInfo userInfo = new UserInfo(
+            null,                                           // pk (不需要)
+            loginUserInfo.getUserType(),                    // userType
+            loginUserInfo.getEmail(),                       // email
+            loginUserInfo.getName(),                        // userName
+            loginUserInfo.getOrgId()                        // orgId
+        );
         // 生成 Access Token（短期，用于访问 API）
         String accessToken = jwtUtils.generateAccessToken(userInfo);
         // 生成 Refresh Token（长期，用于刷新 Access Token）

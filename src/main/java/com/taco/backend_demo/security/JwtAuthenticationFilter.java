@@ -99,10 +99,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // - principal: 主体信息（这里是 UserInfo 用户对象）
                 // - credentials: 凭证（null，因为已经认证过了）
                 // - authorities: 权限列表
+                LoginUserInfo loginUserInfo = (LoginUserInfo) userDetails;
+                UserInfo userInfo = new UserInfo(
+                    null,                                   // pk
+                    loginUserInfo.getUserType(),            // userType
+                    loginUserInfo.getEmail(),               // email
+                    loginUserInfo.getName(),                // userName
+                    loginUserInfo.getOrgId()                // orgId
+                );
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        new UserInfo((LoginUserInfo) userDetails),  // 用户主体
-                        null,                                        // 凭证（不需要）
-                        userDetails.getAuthorities()                 // 用户权限
+                        userInfo,                           // 用户主体
+                        null,                               // 凭证（不需要）
+                        userDetails.getAuthorities()        // 用户权限
                 );
 
                 // 设置认证详情（如远程地址、Session ID 等）

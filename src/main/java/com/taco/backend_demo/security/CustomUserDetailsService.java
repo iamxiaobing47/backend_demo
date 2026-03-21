@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.taco.backend_demo.common.constants.LoginConstants;
 import com.taco.backend_demo.common.exception.BusinessException;
 import com.taco.backend_demo.dto.auth.LoginUserInfo;
+import com.taco.backend_demo.entity.BusinessUserEntity;
 import com.taco.backend_demo.entity.PasswordEntity;
-import com.taco.backend_demo.entity.UserInfoEntity;
+import com.taco.backend_demo.entity.StaffUserEntity;
+import com.taco.backend_demo.mapper.mp.BusinessUserMapper;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
-import com.taco.backend_demo.mapper.mp.VUserInfoMapper;
+import com.taco.backend_demo.mapper.mp.StaffUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -56,10 +59,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final PasswordMapper passwordMapper;
 
     /**
-     * 用户信息视图 Mapper：查询用户完整信息（v_user_info）
-     * 用于获取用户的个人信息和权限
+     * 业务用户 Mapper：查询业务用户信息
      */
-    private final VUserInfoMapper vUserInfoMapper;
+    private final BusinessUserMapper businessUserMapper;
+
+    /**
+     * 员工用户 Mapper：查询员工用户信息
+     */
+    private final StaffUserMapper staffUserMapper;
 
     /**
      * 【核心方法】根据用户名加载用户详情
@@ -70,7 +77,7 @@ public class CustomUserDetailsService implements UserDetailsService {
      * 1. 查询密码实体：验证用户邮箱是否存在
      * 2. 检查账户锁定状态：防止被锁定的用户登录
      * 3. 检查账户启用状态：只有 ACTIVE 状态才能登录
-     * 4. 查询用户信息实体：获取完整个人信息
+     * 4. 查询用户信息实体：从 business_user 或 staff_user 获取信息
      * 5. 构建并返回 LoginUserInfo 对象
      *
      * @param username 用户名（邮箱地址）
@@ -91,8 +98,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // 【步骤 1】查询密码实体
         // 验证用户邮箱是否存在并获取密码信息
-        // LambdaQueryWrapper：类型安全的查询条件构建器
-        // eq() 方法：生成 WHERE email = ? 条件
         PasswordEntity passwordEntity = passwordMapper.selectOne(
             new LambdaQueryWrapper<PasswordEntity>()
                 .eq(PasswordEntity::getEmail, username)
@@ -106,7 +111,6 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // 【步骤 2】检查账户锁定状态
         // Boolean.TRUE.equals() 是安全的空值检查方式
-        // 如果 isLocked 为 null 或 false，条件不成立
         if (Boolean.TRUE.equals(passwordEntity.getIsLocked())) {
             log.warn("User account is locked: {}", username);
             throw new BusinessException(E002);  // 账户被锁定
@@ -120,22 +124,41 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // 【步骤 4】查询用户信息实体
-        // 获取用户的完整个人信息（姓名、用户类型等）
-        UserInfoEntity userInfo = vUserInfoMapper.selectOne(
-            new LambdaQueryWrapper<UserInfoEntity>()
-                .eq(UserInfoEntity::getEmail, username)
+        // 先尝试从 business_user 表查询
+        BusinessUserEntity businessUser = businessUserMapper.selectOne(
+            new LambdaQueryWrapper<BusinessUserEntity>()
+                .eq(BusinessUserEntity::getEmail, username)
         );
 
-        // 用户信息不存在，抛出异常
-        if (userInfo == null) {
-            log.warn("User info not found for email: {}", username);
-            throw new BusinessException(E001);
+        String userType;
+        String name;
+        String orgId;
+
+        if (businessUser != null) {
+            // 业务用户
+            userType = "BUSINESS_USER";
+            name = businessUser.getName();
+            orgId = String.valueOf(businessUser.getBusinessPk());
+        } else {
+            // 尝试从 staff_user 表查询
+            StaffUserEntity staffUser = staffUserMapper.selectOne(
+                new LambdaQueryWrapper<StaffUserEntity>()
+                    .eq(StaffUserEntity::getEmail, username)
+            );
+
+            if (staffUser == null) {
+                log.warn("User info not found for email: {}", username);
+                throw new BusinessException(E001);
+            }
+
+            // 员工用户
+            userType = "STAFF_USER";
+            name = staffUser.getName();
+            orgId = String.valueOf(staffUser.getLocationPk());
         }
 
         // 【步骤 5】构建用户详情对象
-        // LoginUserInfo 是自定义的 UserDetails 实现类
-        // 包含用户信息、密码实体和权限列表
-        return new LoginUserInfo(userInfo, passwordEntity,
-            Collections.singletonList(LoginConstants.ROLE_USER));  // 默认角色：ROLE_USER
+        return new LoginUserInfo(username, name, userType, orgId, passwordEntity,
+            Collections.singletonList(LoginConstants.ROLE_USER));
     }
 }

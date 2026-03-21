@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * 国家实体类
- * 对应数据库表：c_country
+ * 对应数据库表：country
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("c_country")
+@TableName("country")
 public class CountryEntity {
 
     /**

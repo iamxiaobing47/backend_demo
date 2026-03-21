@@ -19,14 +19,14 @@ public class PageUserQueryRequest {
      */
     @NotNull(message = "E014")
     @Min(value = 1, message = "E014")
-    private Integer pageNum;
+    private Long pageNum;
 
     /**
      * 每页数量
      */
     @NotNull(message = "E014")
     @Min(value = 1, message = "E014")
-    private Integer pageSize;
+    private Long pageSize;
 
     /**
      * 用户类型过滤（可选）

@@ -3,8 +3,8 @@ package com.taco.backend_demo.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.taco.backend_demo.common.response.Response;
 import com.taco.backend_demo.common.response.ResponseFactory;
+import com.taco.backend_demo.dto.common.OptionItem;
 import com.taco.backend_demo.dto.user.*;
-import com.taco.backend_demo.entity.UserInfoEntity;
 import com.taco.backend_demo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -93,15 +93,52 @@ public class UserController {
      * - 响应：用户信息实体
      *
      * @param userId 用户 ID（从 URL 路径获取）
+     * @param userType 用户类型
      * @return 响应实体（包含用户信息）
      */
     @Operation(summary = "获取用户信息", description = "根据用户 ID 获取用户信息")
     @GetMapping("/{userId}")
-    public ResponseEntity<Response<UserInfoEntity>> getUser(@PathVariable String userId) {
+    public ResponseEntity<Response<UserInfo>> getUser(@PathVariable String userId, @RequestParam String userType) {
         // 调用 Service 查询用户
-        UserInfoEntity userInfoEntity = userService.getUserByUserId(userId);
+        UserInfo userInfo = userService.getUserByUserId(userId, userType);
         // 返回成功响应（包含用户信息）
-        return ResponseFactory.success(userInfoEntity);
+        return ResponseFactory.success(userInfo);
+    }
+
+    /**
+     * 【接口 6】获取企业列表
+     * <p>
+     * 接口信息：
+     * - 路径：GET /api/users/organizations/business
+     * - 响应：企业列表
+     *
+     * @return 响应实体（包含企业列表）
+     */
+    @Operation(summary = "获取企业列表", description = "获取所有企业信息")
+    @GetMapping("/organizations/business")
+    public ResponseEntity<Response<java.util.List<OptionItem>>> getBusinessList() {
+        // 调用 Service 查询企业列表
+        java.util.List<OptionItem> list = userService.getBusinessList();
+        // 返回成功响应
+        return ResponseFactory.success(list);
+    }
+
+    /**
+     * 【接口 7】获取地区列表
+     * <p>
+     * 接口信息：
+     * - 路径：GET /api/users/organizations/region
+     * - 响应：地区列表
+     *
+     * @return 响应实体（包含地区列表）
+     */
+    @Operation(summary = "获取地区列表", description = "获取所有地区信息")
+    @GetMapping("/organizations/region")
+    public ResponseEntity<Response<java.util.List<OptionItem>>> getRegionList() {
+        // 调用 Service 查询地区列表
+        java.util.List<OptionItem> list = userService.getRegionList();
+        // 返回成功响应
+        return ResponseFactory.success(list);
     }
 
     /**

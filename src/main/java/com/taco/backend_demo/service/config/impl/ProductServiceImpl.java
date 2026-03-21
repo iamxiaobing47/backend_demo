@@ -32,6 +32,15 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, ProductEntity
     public void create(ProductEntity entity) {
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
+        // 如果 productCd 为空，手动生成一个值（最大 id + 1）
+        if (entity.getProductCd() == null) {
+            LambdaQueryWrapper<ProductEntity> wrapper = new LambdaQueryWrapper<>();
+            wrapper.orderByDesc(ProductEntity::getProductCd).last("LIMIT 1");
+            ProductEntity maxProduct = this.getOne(wrapper);
+            int newProductCd = (maxProduct != null && maxProduct.getProductCd() != null)
+                ? maxProduct.getProductCd() + 1 : 1;
+            entity.setProductCd(newProductCd);
+        }
         save(entity);
     }
 

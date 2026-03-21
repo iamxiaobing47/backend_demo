@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * 申请书模板实体类
- * 对应数据库表：p_application_template
+ * 对应数据库表：application_template
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("p_application_template")
+@TableName("application_template")
 public class ApplicationTemplateEntity {
 
     /**

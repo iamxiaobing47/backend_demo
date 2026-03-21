@@ -1,12 +1,12 @@
 package com.taco.backend_demo.dto.auth;
 
+import com.taco.backend_demo.dto.user.UserInfo;
 import com.taco.backend_demo.entity.PasswordEntity;
-import com.taco.backend_demo.entity.UserInfoEntity;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.Collection;
 import java.util.Collections;
 
@@ -15,8 +15,27 @@ import java.util.Collections;
  * 用于 Spring Security 认证流程中的用户信息封装
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class LoginUserInfo extends UserInfoEntity implements UserDetails {
+public class LoginUserInfo implements UserDetails {
+
+    /**
+     * 用户邮箱（用户名）
+     */
+    private String email;
+
+    /**
+     * 用户姓名
+     */
+    private String name;
+
+    /**
+     * 用户类型：BUSINESS_USER 或 STAFF_USER
+     */
+    private String userType;
+
+    /**
+     * 组织 ID（业务 pk 或位置 pk）
+     */
+    private String orgId;
 
     /**
      * 密码实体（包含加密密码和其他状态）
@@ -31,8 +50,23 @@ public class LoginUserInfo extends UserInfoEntity implements UserDetails {
     /**
      * 核心构造函数
      */
-    public LoginUserInfo(UserInfoEntity userInfo, PasswordEntity passwordEntity, Collection<? extends GrantedAuthority> authorities) {
-        super(userInfo);
+    public LoginUserInfo(String email, String name, String userType, String orgId, PasswordEntity passwordEntity, Collection<? extends GrantedAuthority> authorities) {
+        this.email = email;
+        this.name = name;
+        this.userType = userType;
+        this.orgId = orgId;
+        this.passwordEntity = passwordEntity;
+        this.authorities = authorities;
+    }
+
+    /**
+     * 从 UserInfo 创建 LoginUserInfo
+     */
+    public LoginUserInfo(UserInfo userInfo, PasswordEntity passwordEntity, Collection<? extends GrantedAuthority> authorities) {
+        this.email = userInfo.getEmail();
+        this.name = userInfo.getUserName();
+        this.userType = userInfo.getUserType();
+        this.orgId = userInfo.getOrgId();
         this.passwordEntity = passwordEntity;
         this.authorities = authorities;
     }
@@ -46,7 +80,7 @@ public class LoginUserInfo extends UserInfoEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return super.getEmail();
+        return this.email;
     }
 
     @Override

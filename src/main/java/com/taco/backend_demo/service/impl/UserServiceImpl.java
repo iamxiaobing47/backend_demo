@@ -5,21 +5,27 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.taco.backend_demo.common.exception.BusinessException;
+import com.taco.backend_demo.dto.common.OptionItem;
 import com.taco.backend_demo.dto.user.UserInfo;
 import com.taco.backend_demo.dto.user.PageUserQueryRequest;
+import com.taco.backend_demo.entity.BusinessEntity;
 import com.taco.backend_demo.entity.BusinessUserEntity;
+import com.taco.backend_demo.entity.LocationEntity;
 import com.taco.backend_demo.entity.PasswordEntity;
 import com.taco.backend_demo.entity.StaffUserEntity;
-import com.taco.backend_demo.entity.UserInfoEntity;
+import com.taco.backend_demo.mapper.mp.BusinessMapper;
 import com.taco.backend_demo.mapper.mp.BusinessUserMapper;
+import com.taco.backend_demo.mapper.mp.LocationMapper;
 import com.taco.backend_demo.mapper.mp.PasswordMapper;
 import com.taco.backend_demo.mapper.mp.StaffUserMapper;
-import com.taco.backend_demo.mapper.mp.VUserInfoMapper;
 import com.taco.backend_demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.taco.backend_demo.common.message.ErrorMessageCodes.E008;
 import static com.taco.backend_demo.common.message.ErrorMessageCodes.E010;
@@ -38,13 +44,10 @@ import static com.taco.backend_demo.common.message.ErrorMessageCodes.E010;
  * - BUSINESS_USER: 业务用户，关联 business_user 表
  * - STAFF_USER: 员工用户，关联 staff_user 表
  *
- * 【数据库操作】
- * 继承 ServiceImpl<VUserInfoMapper, UserInfoEntity>，获得基础 CRUD 能力
- *
  * @author taco
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity> implements UserService {
+public class UserServiceImpl extends ServiceImpl<PasswordMapper, PasswordEntity> implements UserService {
 
     // ==================== 依赖注入 ====================
 
@@ -67,16 +70,22 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
     private BusinessUserMapper businessUserMapper;
 
     /**
-     * 用户信息视图 Mapper：查询用户综合信息（v_user_info）
-     */
-    @Autowired
-    private VUserInfoMapper vUserInfoMapper;
-
-    /**
      * 密码编码器：负责密码加密（BCrypt）和匹配验证
      */
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    /**
+     * 业务 Mapper：操作用户业务表（business）
+     */
+    @Autowired
+    private BusinessMapper businessMapper;
+
+    /**
+     * 位置 Mapper：操作用户位置表（staff_location）
+     */
+    @Autowired
+    private LocationMapper locationMapper;
 
     /**
      * 【创建用户】处理用户注册
@@ -90,8 +99,8 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
      * @param password 用户密码（明文，会被加密存储）
      * @param userName 用户昵称
      * @param userType 用户类型：BUSINESS_USER 或 STAFF_USER
-     * @param userId 业务用户 ID 或员工用户 ID
-     * @param orgId 组织 ID：业务 ID 或位置 ID
+     * @param userId 业务用户 ID 或员工用户 ID（此处为 pk）
+     * @param orgId 组织 ID：业务 ID 或位置 ID（此处为 pk）
      */
     @Override
     @Transactional
@@ -123,16 +132,14 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
             BusinessUserEntity businessUser = new BusinessUserEntity();
             businessUser.setEmail(email);
             businessUser.setName(userName);
-            businessUser.setBusinessId(orgId);       // 关联企业 ID
-            businessUser.setBusinessUserId(userId);  // 业务用户 ID
+            businessUser.setBusinessPk(Integer.parseInt(orgId));   // 关联企业 pk
             businessUserMapper.insert(businessUser);
         } else if ("STAFF_USER".equals(userType)) {
             // 员工用户：存储在 staff_user 表
             StaffUserEntity staffUser = new StaffUserEntity();
             staffUser.setEmail(email);
             staffUser.setName(userName);
-            staffUser.setLocationId(orgId);          // 关联位置 ID
-            staffUser.setStaffUserId(userId);        // 员工用户 ID
+            staffUser.setLocationPk(Long.parseLong(orgId));        // 关联位置 pk
             staffUserMapper.insert(staffUser);
         } else {
             // 不支持的用户类型
@@ -141,31 +148,33 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
     }
 
     /**
-     * 【查询用户】根据用户 ID 获取用户信息
+     * 【查询用户】根据邮箱获取用户信息
      * <p>
      * 工作流程：
-     * 1. 创建查询条件
-     * 2. 从用户信息视图查询
-     * 3. 如果未找到，抛出异常
+     * 1. 根据用户类型从对应表查询
+     * 2. 如果未找到，抛出异常
      *
-     * @param userId 用户 ID
-     * @return 用户信息实体
+     * @param userId 用户 pk
+     * @param userType 用户类型
+     * @return 用户信息
      */
     @Override
-    public UserInfoEntity getUserByUserId(String userId) {
-        // 创建 LambdaQueryWrapper，类型安全地构建查询条件
-        LambdaQueryWrapper<UserInfoEntity> queryWrapper = new LambdaQueryWrapper<>();
-        // 等价 SQL: WHERE user_id = ?
-        queryWrapper.eq(UserInfoEntity::getUserId, userId);
-
-        // 执行查询
-        UserInfoEntity userInfoEntity = vUserInfoMapper.selectOne(queryWrapper);
-
-        // 如果未找到，抛出异常（E010: 用户不存在）
-        if (userInfoEntity == null) {
+    public UserInfo getUserByUserId(String userId, String userType) {
+        if ("BUSINESS_USER".equals(userType)) {
+            BusinessUserEntity businessUser = businessUserMapper.selectById(Long.parseLong(userId));
+            if (businessUser == null) {
+                throw new BusinessException(E010);
+            }
+            return convertToUserInfo(businessUser, userType);
+        } else if ("STAFF_USER".equals(userType)) {
+            StaffUserEntity staffUser = staffUserMapper.selectById(Long.parseLong(userId));
+            if (staffUser == null) {
+                throw new BusinessException(E010);
+            }
+            return convertToUserInfo(staffUser, userType);
+        } else {
             throw new BusinessException(E010);
         }
-        return userInfoEntity;
     }
 
     /**
@@ -176,29 +185,31 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
      * 2. 查询用户记录
      * 3. 更新字段并保存
      *
-     * @param userId 用户 ID
+     * @param userId 用户 pk
      * @param userType 用户类型：BUSINESS_USER 或 STAFF_USER
      * @param name 新昵称
-     * @param orgId 新组织 ID
+     * @param orgId 新组织 pk
      */
     @Override
     @Transactional
     public void updateUser(String userId, String userType, String name, String orgId) {
         if ("BUSINESS_USER".equals(userType)) {
             // 业务用户更新
-            LambdaQueryWrapper<BusinessUserEntity> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(BusinessUserEntity::getBusinessUserId, userId);
-            BusinessUserEntity businessUser = businessUserMapper.selectOne(queryWrapper);
+            BusinessUserEntity businessUser = businessUserMapper.selectById(Long.parseLong(userId));
+            if (businessUser == null) {
+                throw new BusinessException(E010);
+            }
             businessUser.setName(name);           // 更新昵称
-            businessUser.setBusinessId(orgId);    // 更新关联企业 ID
+            businessUser.setBusinessPk(Integer.parseInt(orgId));    // 更新关联企业 pk
             businessUserMapper.updateById(businessUser);
         } else if ("STAFF_USER".equals(userType)) {
             // 员工用户更新
-            LambdaQueryWrapper<StaffUserEntity> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StaffUserEntity::getStaffUserId, userId);
-            StaffUserEntity staffUser = staffUserMapper.selectOne(queryWrapper);
+            StaffUserEntity staffUser = staffUserMapper.selectById(Long.parseLong(userId));
+            if (staffUser == null) {
+                throw new BusinessException(E010);
+            }
             staffUser.setName(name);            // 更新昵称
-            staffUser.setLocationId(orgId);     // 更新关联位置 ID
+            staffUser.setLocationPk(Long.parseLong(orgId));     // 更新关联位置 pk
             staffUserMapper.updateById(staffUser);
         } else {
             // 不支持的用户类型
@@ -210,53 +221,107 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
      * 【分页查询】根据条件分页查询用户列表
      * <p>
      * 工作流程：
-     * 1. 创建 MybatisPlus 分页对象
-     * 2. 构建动态查询条件（支持多条件组合）
-     * 3. 执行分页查询
-     * 4. 转换为 DTO 返回
+     * 1. 根据用户类型从对应表查询
+     * 2. 转换为 UserInfo DTO
+     * 3. 返回分页结果
      *
      * @param request 分页查询请求（包含页码、页数、筛选条件）
      * @return 分页结果（包含用户列表和总数）
      */
     @Override
     public Page<UserInfo> pageUsers(PageUserQueryRequest request) {
-        // 【步骤 1】创建 MybatisPlus 分页对象
-        // pageNum: 当前页码（从 1 开始）
-        // pageSize: 每页大小
-        Page<UserInfoEntity> page = new Page<>(request.getPageNum(), request.getPageSize());
+        if ("BUSINESS_USER".equals(request.getUserType())) {
+            // 查询业务用户
+            Page<BusinessUserEntity> page = new Page<>(request.getPageNum(), request.getPageSize());
+            LambdaQueryWrapper<BusinessUserEntity> queryWrapper = new LambdaQueryWrapper<>();
 
-        // 【步骤 2】构建查询条件
-        LambdaQueryWrapper<UserInfoEntity> queryWrapper = new LambdaQueryWrapper<>();
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                queryWrapper.like(BusinessUserEntity::getEmail, request.getEmail());
+            }
+            if (request.getUserName() != null && !request.getUserName().isEmpty()) {
+                queryWrapper.like(BusinessUserEntity::getName, request.getUserName());
+            }
 
-        // 【条件 1】用户类型过滤（精确匹配）
-        // 如果传入了 userType，添加 WHERE user_type = ? 条件
-        if (request.getUserType() != null && !request.getUserType().isEmpty()) {
-            queryWrapper.eq(UserInfoEntity::getUserType, request.getUserType());
+            Page<BusinessUserEntity> resultPage = businessUserMapper.selectPage(page, queryWrapper);
+            return convertToUserInfoPage(resultPage, "BUSINESS_USER");
+        } else if ("STAFF_USER".equals(request.getUserType())) {
+            // 查询员工用户
+            Page<StaffUserEntity> page = new Page<>(request.getPageNum(), request.getPageSize());
+            LambdaQueryWrapper<StaffUserEntity> queryWrapper = new LambdaQueryWrapper<>();
+
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                queryWrapper.like(StaffUserEntity::getEmail, request.getEmail());
+            }
+            if (request.getUserName() != null && !request.getUserName().isEmpty()) {
+                queryWrapper.like(StaffUserEntity::getName, request.getUserName());
+            }
+
+            Page<StaffUserEntity> resultPage = staffUserMapper.selectPage(page, queryWrapper);
+            return convertToUserInfoPage(resultPage, "STAFF_USER");
+        } else {
+            // 查询所有用户（合并查询）：先获取所有数据，然后在内存中分页
+            LambdaQueryWrapper<BusinessUserEntity> businessQueryWrapper = new LambdaQueryWrapper<>();
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                businessQueryWrapper.like(BusinessUserEntity::getEmail, request.getEmail());
+            }
+            if (request.getUserName() != null && !request.getUserName().isEmpty()) {
+                businessQueryWrapper.like(BusinessUserEntity::getName, request.getUserName());
+            }
+            List<BusinessUserEntity> allBusinessUsers = businessUserMapper.selectList(businessQueryWrapper);
+
+            LambdaQueryWrapper<StaffUserEntity> staffQueryWrapper = new LambdaQueryWrapper<>();
+            if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+                staffQueryWrapper.like(StaffUserEntity::getEmail, request.getEmail());
+            }
+            if (request.getUserName() != null && !request.getUserName().isEmpty()) {
+                staffQueryWrapper.like(StaffUserEntity::getName, request.getUserName());
+            }
+            List<StaffUserEntity> allStaffUsers = staffUserMapper.selectList(staffQueryWrapper);
+
+            // 合并所有记录
+            List<UserInfo> allRecords = new java.util.ArrayList<>();
+            for (BusinessUserEntity u : allBusinessUsers) {
+                allRecords.add(convertToUserInfo(u, "BUSINESS_USER"));
+            }
+            for (StaffUserEntity u : allStaffUsers) {
+                allRecords.add(convertToUserInfo(u, "STAFF_USER"));
+            }
+
+            // 在内存中分页
+            long total = allRecords.size();
+            long pageNum = request.getPageNum();
+            long pageSize = request.getPageSize();
+            long pages = (total + pageSize - 1) / pageSize;
+
+            List<UserInfo> pagedRecords = new java.util.ArrayList<>();
+            if (pageNum <= pages && pageNum > 0) {
+                int fromIndex = (int) ((pageNum - 1) * pageSize);
+                int toIndex = (int) Math.min(fromIndex + pageSize, total);
+                if (fromIndex < total) {
+                    pagedRecords = allRecords.subList(fromIndex, toIndex);
+                }
+            }
+
+            Page<UserInfo> dtoPage = new Page<>(pageNum, pageSize, total);
+            dtoPage.setRecords(pagedRecords);
+            return dtoPage;
         }
+    }
 
-        // 【条件 2】邮箱模糊查询
-        // 如果传入了 email，添加 WHERE email LIKE '%?%' 条件
-        if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            queryWrapper.like(UserInfoEntity::getEmail, request.getEmail());
-        }
-
-        // 【条件 3】用户名模糊查询
-        // 如果传入了 userName，添加 WHERE user_name LIKE '%?%' 条件
-        if (request.getUserName() != null && !request.getUserName().isEmpty()) {
-            queryWrapper.like(UserInfoEntity::getUserName, request.getUserName());
-        }
-
-        // 【步骤 3】使用 MybatisPlus 分页查询
-        // 自动执行：SELECT * FROM v_user_info WHERE ... LIMIT ?, ?
-        // 同时自动查询总数：SELECT COUNT(*) FROM v_user_info WHERE ...
-        Page<UserInfoEntity> resultPage = vUserInfoMapper.selectPage(page, queryWrapper);
-
-        // 【步骤 4】转换为 UserInfo DTO
-        // 将 Entity 转换为 DTO，便于前后端数据隔离
-        Page<UserInfo> dtoPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
-        // 使用 Stream API 批量转换记录
-        dtoPage.setRecords(resultPage.getRecords().stream().map(UserInfo::new).toList());
-
+    /**
+     * 将 BusinessUserEntity 或 StaffUserEntity 的 Page 转换为 UserInfo 的 Page
+     */
+    private <T> Page<UserInfo> convertToUserInfoPage(Page<T> entityPage, String userType) {
+        Page<UserInfo> dtoPage = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+        dtoPage.setRecords(entityPage.getRecords().stream()
+            .map(entity -> {
+                if (entity instanceof BusinessUserEntity) {
+                    return convertToUserInfo((BusinessUserEntity) entity, "BUSINESS_USER");
+                } else {
+                    return convertToUserInfo((StaffUserEntity) entity, "STAFF_USER");
+                }
+            })
+            .toList());
         return dtoPage;
     }
 
@@ -268,25 +333,73 @@ public class UserServiceImpl extends ServiceImpl<VUserInfoMapper, UserInfoEntity
      * 2. 构建查询条件
      * 3. 执行删除
      *
-     * @param userId 用户 ID
-     * @param userType 用户类型：BUSINESS_USER 或 STAFF_USER
+     * @param userId 用户 pk
+     * @param userType 用户类型
      */
     @Override
     @Transactional
     public void deleteUser(String userId, String userType) {
         if ("BUSINESS_USER".equals(userType)) {
             // 删除业务用户
-            LambdaQueryWrapper<BusinessUserEntity> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(BusinessUserEntity::getBusinessUserId, userId);
-            businessUserMapper.delete(queryWrapper);
+            businessUserMapper.deleteById(Long.parseLong(userId));
         } else if ("STAFF_USER".equals(userType)) {
             // 删除员工用户
-            LambdaQueryWrapper<StaffUserEntity> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(StaffUserEntity::getStaffUserId, userId);
-            staffUserMapper.delete(queryWrapper);
+            staffUserMapper.deleteById(Long.parseLong(userId));
         } else {
             // 不支持的用户类型
             throw new BusinessException(E010);
         }
+    }
+
+    /**
+     * 【获取企业列表】获取所有企业信息
+     *
+     * @return 企业列表
+     */
+    @Override
+    public List<OptionItem> getBusinessList() {
+        List<BusinessEntity> businesses = businessMapper.selectList(new QueryWrapper<>());
+        return businesses.stream()
+            .map(b -> new OptionItem(String.valueOf(b.getPk()), b.getName()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 【获取地区列表】获取所有地区信息
+     *
+     * @return 地区列表
+     */
+    @Override
+    public List<OptionItem> getRegionList() {
+        List<LocationEntity> locations = locationMapper.selectList(new QueryWrapper<>());
+        return locations.stream()
+            .map(l -> new OptionItem(String.valueOf(l.getPk()), l.getName()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 将 BusinessUserEntity 转换为 UserInfo
+     */
+    private UserInfo convertToUserInfo(BusinessUserEntity businessUser, String userType) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setPk(businessUser.getPk());
+        userInfo.setEmail(businessUser.getEmail());
+        userInfo.setUserName(businessUser.getName());
+        userInfo.setUserType(userType);
+        userInfo.setOrgId(String.valueOf(businessUser.getBusinessPk()));
+        return userInfo;
+    }
+
+    /**
+     * 将 StaffUserEntity 转换为 UserInfo
+     */
+    private UserInfo convertToUserInfo(StaffUserEntity staffUser, String userType) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setPk(staffUser.getPk());
+        userInfo.setEmail(staffUser.getEmail());
+        userInfo.setUserName(staffUser.getName());
+        userInfo.setUserType(userType);
+        userInfo.setOrgId(String.valueOf(staffUser.getLocationPk()));
+        return userInfo;
     }
 }

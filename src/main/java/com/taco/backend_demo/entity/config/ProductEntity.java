@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 
 /**
  * 品目实体类
- * 对应数据库表：c_product
+ * 对应数据库表：product
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("c_product")
+@TableName("product")
 public class ProductEntity {
 
     /**

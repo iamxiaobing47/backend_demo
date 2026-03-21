@@ -35,9 +35,11 @@ public class NavigationServiceImpl extends ServiceImpl<NavigationMapper, Navigat
         // 1. 根据用户类型和组织 ID 查询关联的导航菜单
         QueryWrapper<BusinessStaffNavigationEntity> queryWrapper = new QueryWrapper<>();
         if ("BUSINESS_USER".equals(userType)) {
-            queryWrapper.eq("business_id", orgId);
+            // business_pk 是 INTEGER 类型，需要转换
+            queryWrapper.eq("business_pk", Integer.parseInt(orgId));
         } else if ("STAFF_USER".equals(userType)) {
-            queryWrapper.eq("location_id", orgId);
+            // location_pk 是 BIGINT 类型，需要转换
+            queryWrapper.eq("location_pk", Long.parseLong(orgId));
         }
         List<BusinessStaffNavigationEntity> businessStaffNavigations = businessStaffNavigationMapper.selectList(queryWrapper);
 

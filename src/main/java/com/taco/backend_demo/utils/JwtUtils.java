@@ -114,9 +114,9 @@ public class JwtUtils {
      * @return 生成的 Access Token
      */
     public String generateAccessToken(UserInfo userInfo) {
-        // 创建自定义声明，将用户 ID 加入令牌
+        // 创建自定义声明，将用户类型加入令牌
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userInfo.getUserId());
+        claims.put("userType", userInfo.getUserType());
         // 使用 accessExpiration 创建短期令牌
         return createToken(claims, userInfo.getEmail(), accessExpiration);
     }
@@ -137,9 +137,9 @@ public class JwtUtils {
      * @return 生成的 Refresh Token
      */
     public String generateRefreshToken(UserInfo userInfo) {
-        // 创建自定义声明，将用户 ID 加入令牌
+        // 创建自定义声明，将用户类型加入令牌
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userId", userInfo.getUserId());
+        claims.put("userType", userInfo.getUserType());
         // 使用 refreshExpiration 创建长期令牌
         return createToken(claims, userInfo.getEmail(), refreshExpiration);
     }
