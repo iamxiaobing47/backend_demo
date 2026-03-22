@@ -21,7 +21,7 @@ public class ApplicationTemplateEntity {
     /**
      * 模板 ID(主键，自增)
      */
-    @TableId(value = "template_id", type = IdType.AUTO)
+    @TableId(value = "pk", type = IdType.AUTO)
     private Integer templateId;
 
     /**

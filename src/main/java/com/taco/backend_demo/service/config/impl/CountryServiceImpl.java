@@ -39,15 +39,6 @@ public class CountryServiceImpl extends ServiceImpl<CountryMapper, CountryEntity
     public void create(CountryEntity entity) {
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
-        // 如果 countryCd 为空，手动生成一个值（最大 id + 1）
-        if (entity.getCountryCd() == null) {
-            LambdaQueryWrapper<CountryEntity> wrapper = new LambdaQueryWrapper<>();
-            wrapper.orderByDesc(CountryEntity::getCountryCd).last("LIMIT 1");
-            CountryEntity maxCountry = this.getOne(wrapper);
-            int newCountryCd = (maxCountry != null && maxCountry.getCountryCd() != null)
-                ? maxCountry.getCountryCd() + 1 : 1;
-            entity.setCountryCd(newCountryCd);
-        }
         save(entity);
     }
 

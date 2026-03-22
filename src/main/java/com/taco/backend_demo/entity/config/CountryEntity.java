@@ -21,7 +21,7 @@ public class CountryEntity {
     /**
      * 国代码 (主键，自增)
      */
-    @TableId(value = "country_cd", type = IdType.AUTO)
+    @TableId(value = "pk", type = IdType.AUTO)
     private Integer countryCd;
 
     /**

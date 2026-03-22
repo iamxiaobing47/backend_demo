@@ -21,7 +21,7 @@ public class RegionEntity {
     /**
      * 地域代码 (主键，自增)
      */
-    @TableId(value = "region_cd", type = IdType.AUTO)
+    @TableId(value = "pk", type = IdType.AUTO)
     private Integer regionCd;
 
     /**
