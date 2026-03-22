@@ -54,7 +54,10 @@ public class CountryServiceImpl extends ServiceImpl<CountryMapper, CountryEntity
 
     @Override
     @Transactional
-    public void delete(Integer id) {
-        removeById(id);
+    public void delete(Integer countryCd) {
+        // countryCd を使用して削除
+        LambdaQueryWrapper<CountryEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CountryEntity::getCountryCd, countryCd);
+        remove(wrapper);
     }
 }

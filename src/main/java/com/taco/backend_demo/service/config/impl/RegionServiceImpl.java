@@ -30,8 +30,8 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
     @Override
     @Transactional
     public void create(RegionEntity entity) {
-        entity.setCreatedAt(LocalDateTime.now());
-        entity.setUpdatedAt(LocalDateTime.now());
+//        entity.setCreatedAt(LocalDateTime.now());
+//        entity.setUpdatedAt(LocalDateTime.now());
         save(entity);
     }
 
@@ -39,7 +39,7 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
     @Transactional
     public void update(Integer regionCd, RegionEntity entity) {
         entity.setUpdatedAt(LocalDateTime.now());
-        // 使用 pathVariable の regionCd を使用して更新
+
         LambdaQueryWrapper<RegionEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(RegionEntity::getRegionCd, regionCd);
         update(entity, wrapper);
@@ -47,7 +47,10 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
 
     @Override
     @Transactional
-    public void delete(Integer id) {
-        removeById(id);
+    public void delete(Integer regionCd) {
+        // regionCd を使用して削除
+        LambdaQueryWrapper<RegionEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RegionEntity::getRegionCd, regionCd);
+        remove(wrapper);
     }
 }

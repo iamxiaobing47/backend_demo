@@ -118,7 +118,7 @@ public class UserServiceImpl extends ServiceImpl<PasswordMapper, PasswordEntity>
         // 【步骤 2】创建密码实体
         // 存储加密后的密码和账户状态信息
         PasswordEntity passwordEntity = new PasswordEntity();
-        passwordEntity.setEmail(email);                           // 用户邮箱
+        passwordEntity.setEmail(email);                            // 用户邮箱
         passwordEntity.setPassword(passwordEncoder.encode(password)); // BCrypt 加密密码
         passwordEntity.setIsLocked(false);                        // 账户未锁定
         passwordEntity.setLoginStatus("ACTIVE");                  // 登录状态：活跃

@@ -47,7 +47,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, ProductEntity
 
     @Override
     @Transactional
-    public void delete(Integer id) {
-        removeById(id);
+    public void delete(Integer productCd) {
+        // productCd を使用して削除
+        LambdaQueryWrapper<ProductEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductEntity::getProductCd, productCd);
+        remove(wrapper);
     }
 }
