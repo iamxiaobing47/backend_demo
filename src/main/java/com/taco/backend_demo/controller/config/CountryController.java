@@ -46,12 +46,11 @@ public class CountryController {
     }
 
     @Operation(summary = "国家更新", description = "国家情報を更新します")
-    @PutMapping("/{id}")
+    @PutMapping("/{countryCd}")
     public ResponseEntity<Response<Void>> update(
-            @PathVariable Integer id,
+            @PathVariable Integer countryCd,
             @RequestBody CountryEntity entity) {
-        entity.setCountryCd(id);
-        countryService.update(entity);
+        countryService.update(countryCd, entity);
         return ResponseFactory.success(null, NotificationMessageCodes.N002);
     }
 

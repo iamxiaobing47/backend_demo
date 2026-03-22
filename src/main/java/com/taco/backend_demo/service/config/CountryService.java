@@ -33,7 +33,7 @@ public interface CountryService extends IService<CountryEntity> {
     /**
      * 更新国家
      */
-    void update(CountryEntity entity);
+    void update(Integer countryCd, CountryEntity entity);
 
     /**
      * 删除国家

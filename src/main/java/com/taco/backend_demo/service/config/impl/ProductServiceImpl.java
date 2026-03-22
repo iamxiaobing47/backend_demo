@@ -37,9 +37,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, ProductEntity
 
     @Override
     @Transactional
-    public void update(ProductEntity entity) {
+    public void update(Integer productCd, ProductEntity entity) {
         entity.setUpdatedAt(LocalDateTime.now());
-        updateById(entity);
+        // 使用 pathVariable の productCd を使用して更新
+        LambdaQueryWrapper<ProductEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductEntity::getProductCd, productCd);
+        update(entity, wrapper);
     }
 
     @Override

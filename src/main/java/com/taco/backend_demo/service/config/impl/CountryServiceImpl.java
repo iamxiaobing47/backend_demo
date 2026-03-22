@@ -44,9 +44,12 @@ public class CountryServiceImpl extends ServiceImpl<CountryMapper, CountryEntity
 
     @Override
     @Transactional
-    public void update(CountryEntity entity) {
+    public void update(Integer countryCd, CountryEntity entity) {
         entity.setUpdatedAt(LocalDateTime.now());
-        updateById(entity);
+        // 使用 pathVariable の countryCd を使用して更新
+        LambdaQueryWrapper<CountryEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(CountryEntity::getCountryCd, countryCd);
+        update(entity, wrapper);
     }
 
     @Override

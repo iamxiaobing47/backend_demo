@@ -19,9 +19,15 @@ import java.time.LocalDateTime;
 public class ProductEntity {
 
     /**
-     * 品目代码 (主键，自增)
+     * 主键 (自增)
      */
     @TableId(value = "pk", type = IdType.AUTO)
+    private Integer pk;
+
+    /**
+     * 品目代码
+     */
+    @TableField("product_cd")
     private Integer productCd;
 
     /**

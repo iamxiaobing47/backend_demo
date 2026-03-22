@@ -39,12 +39,11 @@ public class RegionController {
     }
 
     @Operation(summary = "地域更新", description = "地域情報を更新します")
-    @PutMapping("/{id}")
+    @PutMapping("/{regionCd}")
     public ResponseEntity<Response<Void>> update(
-            @PathVariable Integer id,
+            @PathVariable Integer regionCd,
             @RequestBody RegionEntity entity) {
-        entity.setRegionCd(id);
-        regionService.update(entity);
+        regionService.update(regionCd, entity);
         return ResponseFactory.success(null, NotificationMessageCodes.N002);
     }
 

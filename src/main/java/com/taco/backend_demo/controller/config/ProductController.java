@@ -39,12 +39,11 @@ public class ProductController {
     }
 
     @Operation(summary = "品目更新", description = "品目情報を更新します")
-    @PutMapping("/{id}")
+    @PutMapping("/{productCd}")
     public ResponseEntity<Response<Void>> update(
-            @PathVariable Integer id,
+            @PathVariable Integer productCd,
             @RequestBody ProductEntity entity) {
-        entity.setProductCd(id);
-        productService.update(entity);
+        productService.update(productCd, entity);
         return ResponseFactory.success(null, NotificationMessageCodes.N002);
     }
 

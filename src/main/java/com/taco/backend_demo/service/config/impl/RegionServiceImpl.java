@@ -37,9 +37,12 @@ public class RegionServiceImpl extends ServiceImpl<RegionMapper, RegionEntity> i
 
     @Override
     @Transactional
-    public void update(RegionEntity entity) {
+    public void update(Integer regionCd, RegionEntity entity) {
         entity.setUpdatedAt(LocalDateTime.now());
-        updateById(entity);
+        // 使用 pathVariable の regionCd を使用して更新
+        LambdaQueryWrapper<RegionEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RegionEntity::getRegionCd, regionCd);
+        update(entity, wrapper);
     }
 
     @Override

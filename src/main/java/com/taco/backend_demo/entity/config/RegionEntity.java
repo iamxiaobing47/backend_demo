@@ -19,9 +19,15 @@ import java.time.LocalDateTime;
 public class RegionEntity {
 
     /**
-     * 地域代码 (主键，自增)
+     * 主键 (自增)
      */
     @TableId(value = "pk", type = IdType.AUTO)
+    private Integer pk;
+
+    /**
+     * 地域代码
+     */
+    @TableField("region_cd")
     private Integer regionCd;
 
     /**

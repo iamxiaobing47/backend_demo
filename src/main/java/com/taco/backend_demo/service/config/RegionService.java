@@ -28,7 +28,7 @@ public interface RegionService extends IService<RegionEntity> {
     /**
      * 更新地域
      */
-    void update(RegionEntity entity);
+    void update(Integer regionCd, RegionEntity entity);
 
     /**
      * 删除地域

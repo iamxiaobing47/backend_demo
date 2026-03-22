@@ -28,7 +28,7 @@ public interface ProductService extends IService<ProductEntity> {
     /**
      * 更新品目
      */
-    void update(ProductEntity entity);
+    void update(Integer productCd, ProductEntity entity);
 
     /**
      * 删除品目

@@ -19,16 +19,22 @@ import java.time.LocalDateTime;
 public class CountryEntity {
 
     /**
-     * 国代码 (主键，自增)
+     * 主键 (自增)
      */
     @TableId(value = "pk", type = IdType.AUTO)
-    private Integer countryCd;
+    private Integer pk;
 
     /**
      * 所属地域代码
      */
     @TableField("region_cd")
     private Integer regionCd;
+
+    /**
+     * 国代码
+     */
+    @TableField("country_cd")
+    private Integer countryCd;
 
     /**
      * 国名
